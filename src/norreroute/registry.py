@@ -42,7 +42,7 @@ def resolve(name: str, **kwargs: object) -> Provider:
 
 def _load_entry_points() -> None:
     """Discover and register providers declared via package entry points."""
-    for ep in entry_points(group="aiproxy.providers"):
+    for ep in entry_points(group="norreroute.providers"):
         register(ep.name, ep.load())
 
 
