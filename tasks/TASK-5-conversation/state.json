@@ -1,10 +1,12 @@
 {
   "task_id": "TASK-5",
   "slug": "conversation",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "coding",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T06:00Z", "ended": null, "result": null}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
+  "branch": "feature/TASK-5-conversation",
   "pr": null,
   "depends_on": [],
   "security_hints": [],
