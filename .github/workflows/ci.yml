@@ -39,6 +39,34 @@ jobs:
           path: coverage.xml
           retention-days: 7
 
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.4.30"
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Set up Python
+        run: uv python install 3.12
+
+      - name: Install dependencies
+        run: uv sync --dev
+
+      - name: Build wheel and sdist
+        run: uv build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 7
+
   lint:
     runs-on: ubuntu-latest
 

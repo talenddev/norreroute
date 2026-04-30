@@ -2,6 +2,8 @@
 name = "aiproxy"
 version = "0.1.0"
 description = "A pragmatic, provider-agnostic Python library for calling LLMs"
+readme = "README.md"
+license = {text = "MIT"}
 authors = [
     {name = "Leo", email = "leo@talenddev.com"}
 ]
