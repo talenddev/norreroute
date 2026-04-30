@@ -1,11 +1,18 @@
 {
   "task_id": "TASK-7",
   "slug": "tool-call-support",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T03:05Z", "ended": "2026-04-30T03:20Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-30T03:21Z", "ended": "2026-04-30T03:21Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T03:22Z", "ended": "2026-04-30T03:25Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T03:26Z", "ended": "2026-04-30T03:27Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T03:28Z", "ended": "2026-04-30T03:28Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T03:29Z", "ended": "2026-04-30T03:29Z", "result": "ok"}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
-  "pr": null,
+  "branch": "feature/TASK-7-tool-call-support",
+  "pr": "https://github.com/talenddev/aiproxy/pull/7",
   "depends_on": ["TASK-6"],
   "security_hints": [],
   "blockers": []

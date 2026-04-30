@@ -1,11 +1,18 @@
 {
   "task_id": "TASK-5",
   "slug": "ollama-provider",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T02:10Z", "ended": "2026-04-30T02:30Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-30T02:31Z", "ended": "2026-04-30T02:31Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T02:32Z", "ended": "2026-04-30T02:35Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T02:36Z", "ended": "2026-04-30T02:37Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T02:38Z", "ended": "2026-04-30T02:38Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T02:39Z", "ended": "2026-04-30T02:39Z", "result": "ok"}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
-  "pr": null,
+  "branch": "feature/TASK-5-ollama-provider",
+  "pr": "https://github.com/talenddev/aiproxy/pull/5",
   "depends_on": ["TASK-3"],
   "security_hints": [],
   "blockers": []
