@@ -1,12 +1,18 @@
 {
   "task_id": "TASK-4",
   "slug": "tracing",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T04:30Z", "ended": "2026-04-30T05:00Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator", "started": "2026-04-30T05:00Z", "ended": "2026-04-30T05:01Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer", "started": "2026-04-30T05:01Z", "ended": "2026-04-30T05:20Z", "result": "ok"},
+    {"stage": "testing", "agent": "python-tester", "started": "2026-04-30T05:20Z", "ended": "2026-04-30T05:45Z", "result": "ok"},
+    {"stage": "merging", "agent": "conductor", "started": "2026-04-30T05:45Z", "ended": "2026-04-30T05:46Z", "result": "ok"}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
-  "pr": null,
+  "branch": "feature/TASK-4-tracing",
+  "pr": "https://github.com/talenddev/norreroute/pull/17",
   "depends_on": [],
-  "security_hints": ["opentelemetry must NOT be imported at module scope — lazy import only", "trace=True with missing dep must raise AIProxyError, not ImportError"],
+  "security_hints": ["opentelemetry NOT imported at module scope - verified", "trace=True with missing dep raises AIProxyError - verified"],
   "blockers": []
 }
