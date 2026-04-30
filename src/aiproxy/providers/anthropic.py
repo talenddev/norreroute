@@ -53,9 +53,7 @@ def _map_http_error(exc: anthropic.APIStatusError, provider_name: str) -> Provid
             str(exc), provider=provider_name, status=status, raw=raw
         )
     if status == 429:
-        return RateLimitError(
-            str(exc), provider=provider_name, status=status, raw=raw
-        )
+        return RateLimitError(str(exc), provider=provider_name, status=status, raw=raw)
     return ProviderError(str(exc), provider=provider_name, status=status, raw=raw)
 
 
