@@ -1,0 +1,12 @@
+{
+  "task_id": "TASK-1",
+  "slug": "retry",
+  "stage": "pending",
+  "stage_history": [],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": null,
+  "pr": null,
+  "depends_on": [],
+  "security_hints": [],
+  "blockers": []
+}
