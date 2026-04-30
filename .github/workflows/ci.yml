@@ -20,7 +20,7 @@ on:
   pull_request:
     branches: [main, develop]
   release:
-    types: [published]
+    types: [published, created]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -157,7 +157,7 @@ jobs:
     permissions:
       contents: read
     environment: pypi
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && github.event.action == 'published'
     needs: [lint, test, build]
 
     steps:
