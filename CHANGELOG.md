@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-04-30
+
+### Fixed
+
+- Provider self-registration bug: `providers/__init__.py` now imports `anthropic` and `ollama` submodules, and `norreroute/__init__.py` imports the providers package so registrations fire on import
+
 ## [0.1.0] - 2026-04-30
 
 ### Added
