@@ -49,6 +49,18 @@ class ToolArgumentError(AIProxyError):
     """Raised when a tool receives invalid arguments."""
 
 
+class UnknownModelError(AIProxyError):
+    """Raised when a model name cannot be resolved to a pricing entry."""
+
+
+class JSONValidationError(AIProxyError):
+    """Raised when a JSON response cannot be parsed or coerced to the target type."""
+
+
+class ConversationOverflowError(AIProxyError):
+    """Raised when a Conversation cannot trim its history to fit the token budget."""
+
+
 __all__ = [
     "AIProxyError",
     "ConfigurationError",
@@ -57,4 +69,7 @@ __all__ = [
     "AuthenticationError",
     "TimeoutError_",
     "ToolArgumentError",
+    "UnknownModelError",
+    "JSONValidationError",
+    "ConversationOverflowError",
 ]
