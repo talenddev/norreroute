@@ -1,10 +1,12 @@
 {
   "task_id": "TASK-2",
   "slug": "pricing",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "coding",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T02:10Z", "ended": null, "result": null}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
+  "branch": "feature/TASK-2-pricing",
   "pr": null,
   "depends_on": [],
   "security_hints": [],
