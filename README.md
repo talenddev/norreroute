@@ -1,556 +1,209 @@
-# Python Development Template for Claude/Opencode
+# aiproxy
 
-## 🗺️ Team Overview
+A pragmatic, provider-agnostic Python library for calling LLMs. Starts with Anthropic Claude and Ollama; designed so adding OpenAI or Gemini later is mechanical, not architectural.
 
-This template provides a coordinated AI agent team for full-stack development workflows:
-- **System design & architecture** — Define service boundaries, docker-compose, infrastructure skeletons, and frontend brief
-- **Build orchestration** — Manage the multi-agent development loop from design to production (backend and frontend run in parallel)
-- **Code quality gates** — Review, test, and verify before deployment
-- **DevOps automation** — Terraform, ECS, CI/CD pipelines, static hosting
-- **Release management** — Versioning, changelogs, hotfix handling
+## Providers
 
-```
-You ──▶ python-architect              "design the system"
-            │
-            │  produces:
-            │  ├── ARCHITECTURE BRIEF  ─────▶ python-tech-lead
-            │  ├── FRONTEND BRIEF      ─────▶ frontend-tech-lead  (if UI in scope)
-            │  ├── docker-compose.yml
-            │  ├── INFRA BRIEF             ─▶ devops
-            │  └── DOCS BRIEF              ─▶ docs-writer
-            ▼
-python-tech-lead                      "implement the brief"
-            │
-            ├──────────────────────────────────────────────────────┐
-            ▼                                                      ▼
-python-tech-lead "Read the backend brief decompose into tasks, write all task files first, then coordinate the team"
-                                                         frontend-tech-lead "Read the frontend brief decompose into tasks, write all task files first, then coordinate the team"
-            │                                                      │
-            │  1. python-developer       builds code               │  1. frontend-developer    builds UI
-            │  2. python-migrator        schema changes (if any)   │  2. frontend-reviewer     quality gate
-            │  3. python-reviewer        code quality gate         │  3. frontend-tester       coverage ≥ 85%
-            │  4. python-tester          coverage ≥ 90%            │  4. fix loop (max 3 iters)
-            │  5. fix loop (max 3 iters)                           │  5. merge checklist
-            │  6. merge checklist                                  │
-            └──────────────────┬───────────────────────────────────┘
-                               │  (both tracks complete)
-                               ▼
-               python-security-reviewer             (shared security gate)
-                               │
-                               ├── 🔴 critical/high  → fix/* branch → re-review (max 2x)
-                               └── 🟢 clean          → proceed
-                               ▼
-               docs-writer                          (shared documentation gate)
-                               │
-                               │  generates:
-                               │  ├── services/*/README.md
-                               │  ├── docs/local-setup.md
-                               │  ├── docs/frontend-setup.md
-                               │  ├── docs/api/*.md
-                               │  ├── docs/adr/ADR-*.md
-                               │  └── docs/runbooks/*.md
-                               ▼
-               devops                               (infrastructure)
-                               │
-                               Terraform + ECS + RDS + SQS + S3 (static) + CI/CD + CloudWatch
-                               ▼
-               release-manager                      (shipping)
-                               │
-                               cut release/* → bump version → CHANGELOG
-                               → PR to main → tag → back-merge to develop
-```
+| Provider | Status | Transport |
+|---|---|---|
+| Anthropic Claude | Supported | anthropic SDK |
+| Ollama | Supported | httpx (direct REST) |
+| OpenAI / Gemini | Not built | Planned |
 
----
+## Requirements
 
-## 🚀 Quick Start
+- Python 3.12+
+- [uv](https://docs.astral.sh/uv/)
 
-1. **Use this template:**
-   - Click "Use this template" → "Create a new repository"
+## Installation
 
-2. **Create the `develop` branch** (required by the Git flow):
-   ```bash
-   git checkout -b develop
-   git push -u origin develop
-   ```
-
-3. **Install tools**:
-   ```bash
-   echo "Installing uv package manager..."
-   curl -LsSf https://astral.sh/uv/install.sh | sh
-   export PATH="$HOME/.local/bin:$PATH"
-   echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
-
-   pip install graphifyy
-   graphify install
-
-   # Install Claude Code via npm (Node.js provided by devcontainer feature)
-   npm install -g @anthropic-ai/claude-code
-
-   graphify claude install
-
-   # Install OpenCode
-   curl -fsSL https://opencode.ai/install | bash
-   graphify opencode install
-   ```
-
----
-
-## 📝 Usage
-
-### Package Management with uv
 ```bash
-# Add a dependency
-uv add requests
+uv add aiproxy
+```
 
-# Add a dev dependency
-uv add --dev pytest
+## Quick Start
 
-# Install all dependencies
+### Non-streaming (async)
+
+```python
+import asyncio
+from aiproxy import Client
+from aiproxy.types import ChatRequest, Message, TextPart
+
+async def main():
+    client = Client("anthropic", api_key="sk-ant-...")
+    # or: client = Client("anthropic")  # reads ANTHROPIC_API_KEY from env
+
+    request = ChatRequest(
+        model="claude-3-haiku-20240307",
+        messages=[
+            Message(role="user", content=[TextPart(text="What is 2 + 2?")])
+        ],
+        system="You are a helpful math assistant.",
+        max_tokens=256,
+    )
+
+    response = await client.chat(request)
+    print(response.content[0].text)   # "4"
+    print(response.usage.output_tokens)
+    await client.aclose()
+
+asyncio.run(main())
+```
+
+### Sync wrapper (scripts / CLIs)
+
+```python
+from aiproxy import Client
+from aiproxy.types import ChatRequest, Message, TextPart
+
+client = Client("ollama", base_url="http://localhost:11434")
+
+request = ChatRequest(
+    model="llama3",
+    messages=[Message(role="user", content=[TextPart(text="Hello")])],
+)
+
+response = client.chat_sync(request)
+print(response.content[0].text)
+```
+
+`chat_sync` calls `asyncio.run` internally — do not use it inside a running event loop.
+
+### Streaming
+
+```python
+async def stream_example():
+    client = Client("anthropic")
+    from aiproxy.streaming import TextDelta, StreamEnd
+
+    async for event in client.stream(request):
+        if isinstance(event, TextDelta):
+            print(event.text, end="", flush=True)
+        elif isinstance(event, StreamEnd):
+            print()
+            break
+```
+
+### Tool calling
+
+```python
+from aiproxy.types import ChatRequest, Message, TextPart, ToolSpec, ToolUsePart
+
+weather_tool = ToolSpec(
+    name="get_weather",
+    description="Get the current weather for a city",
+    parameters={
+        "type": "object",
+        "properties": {"city": {"type": "string"}},
+        "required": ["city"],
+    },
+)
+
+request = ChatRequest(
+    model="claude-3-haiku-20240307",
+    messages=[Message(role="user", content=[TextPart(text="What's the weather in Paris?")])],
+    tools=[weather_tool],
+    max_tokens=256,
+)
+
+response = await client.chat(request)
+for part in response.content:
+    if isinstance(part, ToolUsePart):
+        print(f"Tool call: {part.name}({part.arguments})")
+        # {"city": "Paris"}
+```
+
+## Configuration
+
+### Anthropic
+
+| Env var | Required | Default | Description |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes | — | Anthropic API key |
+| `ANTHROPIC_BASE_URL` | No | `https://api.anthropic.com` | API base URL |
+| `ANTHROPIC_API_VERSION` | No | `2023-06-01` | API version header |
+| `ANTHROPIC_TIMEOUT_S` | No | `60.0` | Request timeout in seconds |
+
+### Ollama
+
+| Env var | Required | Default | Description |
+|---|---|---|---|
+| `OLLAMA_BASE_URL` | No | `http://localhost:11434` | Ollama server base URL |
+| `OLLAMA_TIMEOUT_S` | No | `120.0` | Request timeout in seconds |
+
+Settings can also be passed as keyword arguments to `Client`:
+
+```python
+client = Client("anthropic", api_key="sk-ant-...", timeout_s=30.0)
+client = Client("ollama", base_url="http://gpu-host:11434")
+```
+
+## Provider registration
+
+Providers self-register on import. You can also register third-party providers:
+
+```python
+from aiproxy.registry import register
+
+register("my-provider", MyProviderFactory)
+client = Client("my-provider", some_kwarg="value")
+```
+
+Or declare an entry point in your package:
+
+```toml
+[project.entry-points."aiproxy.providers"]
+my-provider = "my_package.providers:factory"
+```
+
+## Error handling
+
+```python
+from aiproxy.errors import AuthenticationError, RateLimitError, ProviderError
+
+try:
+    response = await client.chat(request)
+except AuthenticationError as e:
+    print(f"Bad API key: {e}")
+except RateLimitError as e:
+    print(f"Rate limited (status {e.status})")
+except ProviderError as e:
+    print(f"Provider error from {e.provider}: {e}")
+```
+
+## Development
+
+```bash
+# Install dependencies (including dev)
 uv sync
 
-# Run Python with uv
-uv run python your_script.py
+# Run tests
+uv run pytest
+
+# Run tests with coverage
+uv run pytest --cov=src --cov-report=term-missing
+
+# Lint
+uv run ruff check src/
+
+# Type check
+uv run mypy src/
 ```
 
-### Claude Code
-```bash
-# Start interactive session
-claude
-
-# Ask Claude about a specific file
-claude "explain src/main.py"
-```
-
-### Open Code
-```bash
-# Start interactive session
-opencode
-```
-
----
-
-## 🤖 Agent Team
-
-### python-architect (+ frontend brief)
-**System Design & Architecture**
-
-Designs the initial system structure, defines service boundaries, and creates infrastructure scaffolding.
-
-| Trigger | What it produces |
-|---|---|
-| `"design"` | System architecture document + optional frontend brief |
-| `"architect"` | Service boundary definitions |
-| `"how should I structure"` | Directory structure recommendations |
-| `"microservice"` | Service decomposition plan |
-| `"define infra"` | Infrastructure brief for devops |
-| `"docker-compose"` | Local development skeleton |
-
-**Usage Example:**
-```bash
-# Design a new orders microservice
-claude "design an orders microservice for handling checkout"
-
-# Or trigger the agent
-claude /graphify "create order service"
-```
-
----
-
-### python-tech-lead
-**Build Orchestration**
-
-Manages the full development loop, delegating tasks to developer, tester, reviewer, and migrator agents.
-
-| Trigger | What it does |
-|---|---|
-| `"build this"` | Starts full implementation loop |
-| `"implement the brief"` | Executes architect's design |
-| `"run the team"` | Orchestrates all agents |
-| `"start the project"` | Initial development cycle |
-| `"coordinate the team"` | Multi-agent coordination |
-
-**Usage Example:**
-```bash
-# After architect produces a design
-claude "implement the brief from architecture doc"
-
-```
-
----
-
-### python-developer
-**Code Implementation**
-
-Writes Python code using uv, FastAPI, SQLAlchemy, and SQS. Handles all coding tasks assigned by the tech-lead.
-
-| Trigger | What it does |
-|---|---|
-| assigned by tech-lead | Implements code tasks |
-
-**Usage Example:**
-```bash
-# The developer runs automatically when tech-lead assigns tasks
-# Manual invocation:
-claude "create the Order model with create and list methods"
-```
-
----
-
-### python-reviewer
-**Code Quality Review**
-
-Reviews code for KISS/YAGNI adherence, type safety, and architectural boundary violations. Runs before testing.
-
-| Trigger | What it does |
-|---|---|
-| `"review this code"` | Reviews code quality |
-| `"check code quality"` | Validates design and patterns |
-| assigned by tech-lead | Automated code review |
-
-**Usage Example:**
-```bash
-# After developer completes implementation
-claude "review this code before testing"
-
-# Or manually trigger
-claude /review "src/orders/models.py"
-```
-
----
-
-### python-migrator
-**Database Migration**
-
-Writes and verifies Alembic migrations, handles zero-downtime patterns for schema changes.
-
-| Trigger | What it does |
-|---|---|
-| `"add migration"` | Creates new migration |
-| `"schema change"` | Schema modification migration |
-| `"new model"` | Model-based migration |
-| `"backfill"` | Data backfill migration |
-| assigned by tech-lead | Automated migration task |
-
-**Usage Example:**
-```bash
-# Create migration for new model
-claude "add migration for new OrderStatus enum"
-
-# Create backfill migration
-claude "backfill existing orders with new status enum"
-```
-
----
-
-### python-tester
-**Testing & Coverage**
-
-Audits test coverage (target ≥ 90%), raises bug reports, runs test suites.
-
-| Trigger | What it does |
-|---|---|
-| assigned by tech-lead | Runs test suite |
-| `"add tests"` | Creates test cases |
-| `"check coverage"` | Coverage audit |
-| `"why is this test failing"` | Debug failing tests |
-
-**Usage Example:**
-```bash
-# After code review passes
-claude "run tests and check coverage"
-
-# Or manually
-claude "add edge cases for empty cart"
-```
-
----
-
-### python-security-reviewer
-**Security Gate**
-
-Security review before documentation or AWS promotion. Checks vulnerabilities, secrets, and permissions.
-
-| Trigger | What it does |
-|---|---|
-| `"security review"` | Security audit |
-| `"security audit"` | Vulnerability scan |
-| `"before we deploy"` | Pre-deployment security check |
-| `"check secrets"` | Secret validation |
-| `"OWASP"` | OWASP checklist |
-| assigned by tech-lead | Automated security gate |
-
-**Usage Example:**
-```bash
-# Before documentation or AWS promotion
-claude "security review before deploying"
-
-# Check for vulnerabilities
-claude "scan for CVE-2023-32681 in dependencies"
-```
-
----
-
-### frontend-tech-lead
-**Frontend Build Orchestration**
-
-Manages the full frontend development loop, delegating tasks to frontend-developer, frontend-reviewer, and frontend-tester. Reads `docs/frontend-brief.md` produced by the architect.
-
-| Trigger | What it does |
-|---|---|
-| `"build the frontend"` | Starts full UI implementation loop |
-| `"implement the frontend brief"` | Executes architect's frontend design |
-| `"run the frontend team"` | Orchestrates all frontend agents |
-| `"coordinate the frontend team"` | Multi-agent frontend coordination |
-
-**Usage Example:**
-```bash
-claude "implement the frontend brief from docs/frontend-brief.md"
-```
-
----
-
-### frontend-developer
-**UI Implementation**
-
-Writes TypeScript/React code using pnpm, Vitest, and Testing Library. Handles all coding tasks assigned by the frontend tech-lead.
-
-| Trigger | What it does |
-|---|---|
-| assigned by frontend-tech-lead | Implements UI tasks |
-
-**Usage Example:**
-```bash
-# Manual invocation:
-claude "create the OrderList component with loading and error states"
-```
-
----
-
-### frontend-reviewer
-**Frontend Code Quality Review**
-
-Reviews components, hooks, and utilities for design quality, TypeScript safety, accessibility violations, and architectural boundary violations. Runs before frontend testing.
-
-| Trigger | What it does |
-|---|---|
-| `"review this component"` | Reviews component quality |
-| `"check frontend code quality"` | Validates design and patterns |
-| assigned by frontend-tech-lead | Automated code review |
-
-**Usage Example:**
-```bash
-claude "review this component before testing"
-```
-
----
-
-### frontend-tester
-**Frontend Testing & Coverage**
-
-Audits test coverage (target ≥ 85%), raises bug reports, runs vitest suites with Testing Library.
-
-| Trigger | What it does |
-|---|---|
-| assigned by frontend-tech-lead | Runs test suite |
-| `"add frontend tests"` | Creates component/hook tests |
-| `"check frontend coverage"` | Coverage audit |
-| `"why is this test failing"` | Debug failing tests |
-
-**Usage Example:**
-```bash
-claude "add tests for the OrderList component"
-```
-
----
-
-### docs-writer
-**Documentation**
-
-Generates README files, API docs, ADRs, runbooks, and local setup guides.
-
-| Trigger | What it produces |
-|---|---|
-| `"write docs"` | Documentation generation |
-| `"document this"` | Contextual documentation |
-| `"create README"` | Service README |
-| `"write a runbook"` | Operational runbook |
-| `"ADR"` | Architecture decision record |
-| assigned by tech-lead | Auto docs after security passes |
-
-**Usage Example:**
-```bash
-# Write service documentation
-claude "write docs for the orders service"
-
-# Generate local setup guide
-claude "write docs/local-setup.md"
-```
-
----
-
-### devops
-**Infrastructure & DevOps**
-
-Handles Terraform, ECS, RDS, SQS, CI/CD pipelines, Docker containers, and AWS promotion.
-
-| Trigger | What it does |
-|---|---|
-| `"deploy"` | Deployment preparation |
-| `"terraform"` | Terraform operations |
-| `"promote to prod"` | AWS promotion |
-| `"ci/cd"` | Pipeline configuration |
-| `"dockerise"` | Containerization |
-| `"ECS"` | ECS service definition |
-| `"RDS"` | Database setup |
-| `"SQS"` | Message queue configuration |
-
-**Usage Example:**
-```bash
-# Deploy to AWS
-claude "deploy the orders service to production"
-
-# Terraform state operations
-claude "apply terraform for rds endpoint"
-```
-
----
-
-### release-manager
-**Release Management**
-
-Cuts release branches, bumps versions, generates changelogs, merges to main, tags releases, handles hotfixes.
-
-| Trigger | What it does |
-|---|---|
-| `"release"` | Cutting release branch |
-| `"ship this"` | Prepares release |
-| `"tag a version"` | Version tagging |
-| `"hotfix"` | Hotfix branch creation |
-| `"cut a release"` | Release pipeline |
-| `"bump version"` | Semantic version bump |
-| `"prepare release"` | Release preparation |
-
-**Usage Example:**
-```bash
-# Cut a release branch
-claude "prepare release v0.5.0"
-
-# Handle a production hotfix
-claude "hotfix for customer-facing checkout bug"
-```
-
----
-
-### python-data-scientist
-**Data Science & ML**
-
-Performs exploratory data analysis, feature engineering, model training, prediction, classification, and evaluation.
-
-| Trigger | What it does |
-|---|---|
-| `"train a model"` | Model training |
-| `"predict"` | Model prediction |
-| `"classify"` | Classification task |
-| `"forecast"` | Time series forecasting |
-| `"EDA"` | Exploratory data analysis |
-| `"feature engineering"` | Feature creation |
-| `"evaluate model"` | Model evaluation |
-
-**Usage Example:**
-```bash
-# Train a model
-claude "train a model to predict order defaults"
-
-# Run EDA on customer data
-claude "EDA on customer churn dataset"
-```
-
----
-
-## 📂 Git Flow
-
-### Branch Strategy
-- `main` — Production only, protected, no direct commits
-- `develop` — Integration branch, all features merge here
-- `feature/*` — One branch per task, from develop
-- `fix/*` — Bug fixes from tester or security reviewer
-- `release/*` — Cut from develop when releasing, merged to main + develop
-- `hotfix/*` — Cut from main for prod incidents only
-
-### Branch Naming
-- `feature/TASK-{N}-{short-slug}` — e.g., `feature/TASK-3-order-repository`
-- `fix/TASK-{N}-{bug-slug}` — e.g., `fix/TASK-3-null-order-id`
-- `hotfix/{incident-slug}` — e.g., `hotfix/dlq-consumer-crash`
-
-### Commit Message Format
-```
-<type>(<scope>): <short description>
-```
-
-**Types:** `feat`, `fix`, `test`, `docs`, `chore`, `refactor`, `ci`, `perf`
-
-### Pull Request Rules
-- `feature/*` and `fix/*` require PR into develop
-- PR title = commit message format
-- Pass CI (tests + linting) before merge
-- Squash merge into develop
-- Delete branch after merge
-
-### Protected Branches
-- `main` and `develop` — No direct pushes, ever
-- Merge to main requires PR from `release/*` or `hotfix/*` branch
-
----
-
-## 📊 Code Flow
-
-```
-You ──▶ python-architect              "design the system"
-            │
-            │  produces:
-            │  ├── ARCHITECTURE BRIEF  ──────────────────────▶ python-tech-lead
-            │  ├── docker-compose.yml  (local infra skeleton)
-            │  ├── INFRA BRIEF         ──────────────────────▶ devops
-            │  └── DOCS BRIEF          ──────────────────────▶ docs-writer
-            ▼
-python-tech-lead                      "implement the brief"
-            │
-            │  ┌─── per task (in order) ────────────────────────┐
-            │  │  1. python-developer   builds                   │
-            │  │  2. python-migrator    schema changes (if any)  │
-            │  │  3. python-reviewer    code quality gate        │
-            │  │  4. python-tester      coverage ≥ 90%           │
-            │  │  5. fix loop           max 3 iterations         │
-            │  │  6. merge checklist    PR → CI → squash         │
-            │  └────────────────────────────────────────────────┘
-            │
-            │  PROGRESS.md: all tasks complete ✅
-            ▼
-    python-security-reviewer          (gate 1)
-            │
-            ├── 🔴 critical/high → fix/* branch → re-review (max 2x)
-            └── 🟢 clean (medium/low logged as debt)
-                    ▼
-    docs-writer                       (gate 2)
-            │
-            │  produces:
-            │  ├── services/*/README.md
-            │  ├── docs/local-setup.md
-            │  ├── docs/api/*.md
-            │  ├── docs/adr/ADR-*.md
-            │  └── docs/runbooks/*.md
-            ▼
-    devops                            (promotion)
-            │
-            │  Terraform + ECS + RDS + SQS + CI/CD + CloudWatch
-            ▼
-            🚀 Production
-            │
-            ▼
-    release-manager                   (shipping)
-            │
-            │  cut release/* → bump version → CHANGELOG
-            │  → PR to main → tag → back-merge to develop
-            ▼
-            🏷️  v{X.Y.Z} tagged on main
-```
+## Not built (out of scope for v0.1)
+
+- Retry / exponential backoff
+- Response caching
+- Rate limiting / quota tracking
+- Token counting / cost estimation
+- Prompt templating
+- Conversation / session persistence
+- Embeddings, image generation, audio APIs
+- Structured-output helpers
+- Multi-provider fallback / load balancing
+- Observability hooks (OpenTelemetry)
+
+## Architecture
+
+See [docs/architecture-brief.md](docs/architecture-brief.md) for the design rationale and key tradeoffs.
