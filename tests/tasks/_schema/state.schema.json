@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task-state",
+  "title": "Task State",
+  "description": "Per-task state file written and updated by python-tech-lead. Source of truth for stage progression. PROGRESS.md is a generated view of these files.",
+  "type": "object",
+  "required": ["task_id", "slug", "stage", "stage_history", "fix_iterations", "branch", "pr", "depends_on", "security_hints", "blockers"],
+  "properties": {
+    "task_id": {
+      "type": "string",
+      "pattern": "^TASK-[0-9]+$",
+      "examples": ["TASK-1", "TASK-12"]
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "examples": ["order-repository", "sqs-consumer"]
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "coding",
+        "migrating",
+        "reviewing",
+        "fixing_review",
+        "testing",
+        "fixing_test",
+        "merging",
+        "done",
+        "blocked"
+      ]
+    },
+    "stage_history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["stage", "agent", "started", "ended", "result"],
+        "properties": {
+          "stage":   { "type": "string" },
+          "agent":   { "type": ["string", "null"] },
+          "started": { "type": ["string", "null"], "format": "date-time" },
+          "ended":   { "type": ["string", "null"], "format": "date-time" },
+          "result":  { "type": ["string", "null"], "enum": ["ok", "blocked", "bugs", "skipped", "error", null] }
+        }
+      }
+    },
+    "fix_iterations": {
+      "type": "object",
+      "required": ["review", "test"],
+      "properties": {
+        "review": { "type": "integer", "minimum": 0, "maximum": 2 },
+        "test":   { "type": "integer", "minimum": 0, "maximum": 3 }
+      }
+    },
+    "branch": {
+      "type": ["string", "null"],
+      "examples": ["feature/TASK-3-order-repository"]
+    },
+    "pr": {
+      "type": ["string", "null"],
+      "description": "GitHub PR URL or number once opened",
+      "examples": ["https://github.com/org/repo/pull/42"]
+    },
+    "depends_on": {
+      "type": "array",
+      "items": { "type": "string", "pattern": "^TASK-[0-9]+$" },
+      "description": "Task IDs that must be in stage 'done' before this task can leave 'pending'."
+    },
+    "security_hints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Free-text hints from python-developer about sensitive areas (e.g. 'handles JWT', 'calls payment API'). Forwarded to python-security-reviewer."
+    },
+    "blockers": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Human-readable blocker descriptions when stage is 'blocked'."
+    }
+  },
+  "additionalProperties": false
+}

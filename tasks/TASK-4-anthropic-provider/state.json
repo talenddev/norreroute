@@ -1,0 +1,19 @@
+{
+  "task_id": "TASK-4",
+  "slug": "anthropic-provider",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T01:40Z", "ended": "2026-04-30T02:00Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-30T02:01Z", "ended": "2026-04-30T02:01Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T02:02Z", "ended": "2026-04-30T02:05Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T02:06Z", "ended": "2026-04-30T02:07Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T02:08Z", "ended": "2026-04-30T02:08Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T02:09Z", "ended": "2026-04-30T02:09Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-4-anthropic-provider",
+  "pr": "https://github.com/talenddev/aiproxy/pull/4",
+  "depends_on": ["TASK-3"],
+  "security_hints": ["ANTHROPIC_API_KEY must never be logged or included in ChatResponse.raw"],
+  "blockers": []
+}

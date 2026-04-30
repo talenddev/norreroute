@@ -1,0 +1,12 @@
+{
+  "task_id": "TASK-3",
+  "slug": "provider-protocol-and-client",
+  "stage": "pending",
+  "stage_history": [],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": null,
+  "pr": null,
+  "depends_on": ["TASK-2"],
+  "security_hints": [],
+  "blockers": []
+}

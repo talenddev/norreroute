@@ -1,0 +1,19 @@
+{
+  "task_id": "TASK-2",
+  "slug": "core-data-model",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T00:45Z", "ended": "2026-04-30T01:00Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-30T01:01Z", "ended": "2026-04-30T01:01Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T01:02Z", "ended": "2026-04-30T01:05Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T01:06Z", "ended": "2026-04-30T01:07Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T01:08Z", "ended": "2026-04-30T01:08Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T01:09Z", "ended": "2026-04-30T01:09Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-2-core-data-model",
+  "pr": "https://github.com/talenddev/aiproxy/pull/2",
+  "depends_on": ["TASK-1"],
+  "security_hints": [],
+  "blockers": []
+}

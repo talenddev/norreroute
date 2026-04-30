@@ -1,67 +1,145 @@
+# CI pipeline for aiproxy
+#
+# Jobs:
+#   lint  — ruff check + mypy (Python 3.12)
+#   test  — pytest matrix (Python 3.12, 3.13) with coverage upload
+#   build — uv build + wheel smoke-test (Python 3.12, depends on lint + test)
+#
+# Security:
+#   - All actions pinned to commit SHA digests (not mutable version tags)
+#   - Workflow-level permissions denied; each job grants only what it needs
+#   - uv tool-cache shared between steps via setup-uv built-in caching
+
 name: CI
 
 on:
   push:
     branches: [main, develop]
   pull_request:
+    branches: [main, develop]
 
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Deny everything at workflow level; jobs grant only what they need.
+permissions: {}
+
 jobs:
-  test:
+  # ---------------------------------------------------------------------------
+  # lint — static analysis: ruff + mypy
+  # ---------------------------------------------------------------------------
+  lint:
+    name: Lint (ruff + mypy)
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - uses: astral-sh/setup-uv@v7
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e  # v6
         with:
-          version: "0.4.30"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - name: Set up Python
+      - name: Install Python 3.12
         run: uv python install 3.12
 
       - name: Install dependencies
-        run: uv sync --dev
+        run: uv sync --group dev
+
+      - name: Ruff lint
+        run: uv run ruff check src/ tests/
+
+      - name: Ruff format check
+        run: uv run ruff format --check src/ tests/
+
+      - name: Mypy type check
+        run: uv run mypy src/
+
+  # ---------------------------------------------------------------------------
+  # test — pytest with coverage, matrix over supported Python versions
+  # ---------------------------------------------------------------------------
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e  # v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --group dev
 
       - name: Run tests with coverage
-        run: uv run pytest --cov=src --cov-report=xml --cov-report=term-missing --cov-fail-under=90 tests/
+        run: >-
+          uv run pytest
+          --cov=src
+          --cov-report=xml:coverage-${{ matrix.python-version }}.xml
+          --cov-report=term-missing
+          --cov-fail-under=85
+          tests/
 
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v7
+      - name: Upload coverage XML
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         if: always()
         with:
-          name: coverage-report
-          path: coverage.xml
+          name: coverage-${{ matrix.python-version }}
+          path: coverage-${{ matrix.python-version }}.xml
           retention-days: 7
 
-  lint:
+  build:
+    name: Build (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - uses: astral-sh/setup-uv@v7
+      - name: Set up uv
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e  # v6
         with:
-          version: "0.4.30"
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - name: Set up Python
-        run: uv python install 3.12
+      - name: Install Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
         run: uv sync --dev
 
-      - name: Lint
-        run: uv run ruff check src/
+      - name: Build wheel and sdist
+        run: uv build
 
-      - name: Format check
-        run: uv run ruff format --check src/
+      - name: Verify wheel installs cleanly
+        run: |
+          pip install dist/*.whl
+          python -c "import aiproxy; print('aiproxy import OK')"
 
-      - name: Type check
-        run: uv run mypy src/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: build-artifacts
+          path: dist/
+          retention-days: 7

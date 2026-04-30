@@ -1,0 +1,12 @@
+{
+  "task_id": "TASK-6",
+  "slug": "integration-roundtrip",
+  "stage": "pending",
+  "stage_history": [],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": null,
+  "pr": null,
+  "depends_on": ["TASK-4", "TASK-5"],
+  "security_hints": [],
+  "blockers": []
+}

@@ -1,0 +1,19 @@
+{
+  "task_id": "TASK-1",
+  "slug": "package-scaffold",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T00:00Z", "ended": "2026-04-30T00:30Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-30T00:31Z", "ended": "2026-04-30T00:31Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T00:32Z", "ended": "2026-04-30T00:40Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T00:41Z", "ended": "2026-04-30T00:42Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T00:43Z", "ended": "2026-04-30T00:43Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T00:44Z", "ended": "2026-04-30T00:44Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-1-package-scaffold",
+  "pr": "https://github.com/talenddev/aiproxy/pull/1",
+  "depends_on": [],
+  "security_hints": [],
+  "blockers": []
+}

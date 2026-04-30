@@ -1,0 +1,12 @@
+{
+  "task_id": "TASK-2",
+  "slug": "core-types",
+  "stage": "pending",
+  "stage_history": [],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": null,
+  "pr": null,
+  "depends_on": ["TASK-1"],
+  "security_hints": [],
+  "blockers": []
+}

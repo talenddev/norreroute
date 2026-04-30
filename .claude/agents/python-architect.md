@@ -310,7 +310,46 @@ Produce working `docker-compose.yml` and `.env.example` only. Do NOT write full 
 
 **Note:** Every service listed under `localstack` `SERVICES:` must have corresponding Terraform module before AWS promotion. Flag any gaps in devops handoff.
 
-### 5. AWS promotion checklist
+### 5. Frontend brief (when UI is in scope)
+If the system includes a frontend, also produce `docs/frontend-brief.md`. Decide whether a frontend is in scope based on the user request — do not add one speculatively.
+
+```markdown
+# Frontend Brief
+
+## Framework
+[React + Vite | Next.js — state reason for choice]
+
+## API contract
+[List of backend endpoints the frontend will consume, with request/response shapes]
+
+## Pages / routes
+| Route | Purpose |
+|---|---|
+| /orders | Order list view |
+| /orders/:id | Order detail view |
+
+## Component inventory
+[Top-level features and the key components each requires]
+
+## State management
+[Server state: React Query | SWR. Client state: useState / Context only if needed — no Redux unless justified]
+
+## Auth
+[None | JWT in HttpOnly cookie | OAuth — specify flow]
+
+## Environment variables
+| Var | Purpose | Example |
+|---|---|---|
+| VITE_API_URL | Backend base URL | http://localhost:8000 |
+
+## First milestone
+[Smallest working UI slice — one page, one data fetch, one interaction]
+
+## Out of scope (YAGNI — do not build yet)
+- [item 1]
+```
+
+### 6. AWS promotion checklist
 Config values that change for production (endpoints, secrets, region). Pass full list to `devops` in handoff below.
 
 ---
@@ -366,14 +405,14 @@ pydantic-settings, env-file driven. See `src/shared/config.py`.
 [config values that change: endpoints, secrets, region]
 ```
 
-### Step 2 — Pass brief to python-tech-lead
+### Step 2 — Pass briefs to tech leads
 
-After file is written, output to python-tech-lead:
+After files are written, output to the relevant tech leads:
 
 ```
 ARCHITECTURE BRIEF
 ─────────────────────────────────────
-Brief saved to: docs/architecture-brief.md
+Backend brief saved to: docs/architecture-brief.md
 Services to build: [list]
 Start with: [single service or monolith]
 Local infra: docker-compose.yml (attached)
@@ -384,4 +423,17 @@ First milestone: [smallest working slice]
 DO NOT build: [list of things explicitly out of scope for now — YAGNI]
 ```
 
-Always define what explicitly **out of scope** to prevent over-engineering by developer agent.
+If frontend is in scope, additionally output to frontend-tech-lead:
+
+```
+FRONTEND BRIEF
+─────────────────────────────────────
+Brief saved to: docs/frontend-brief.md
+Framework: [React + Vite | Next.js]
+API contract: docs/frontend-brief.md §API contract
+First milestone: [smallest working UI slice]
+─────────────────────────────────────
+DO NOT build: [list of things explicitly out of scope for now — YAGNI]
+```
+
+Always define what is explicitly **out of scope** to prevent over-engineering by developer agents.

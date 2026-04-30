@@ -6,7 +6,8 @@
       "Bash(python3:*)",
       "Bash(pytest:*)",
       "Bash(ruff:*)",
-      "Bash(mypy:*)"
+      "Bash(mypy:*)",
+      "Bash(cat:*)"
     ],
     "deny": [
       "Bash(curl:*)",
