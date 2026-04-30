@@ -1,0 +1,18 @@
+{
+  "task_id": "TASK-3",
+  "slug": "xlsx-source",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-13T01:11Z", "ended": "2026-04-13T01:40Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator",  "started": "2026-04-13T01:40Z", "ended": "2026-04-13T01:41Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-13T01:41Z", "ended": "2026-04-13T01:45Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-13T01:45Z", "ended": "2026-04-13T01:50Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-13T01:50Z", "ended": "2026-04-13T01:51Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-3-xlsx-source",
+  "pr": "merged",
+  "depends_on": ["TASK-2"],
+  "security_hints": [],
+  "blockers": []
+}

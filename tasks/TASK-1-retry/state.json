@@ -1,0 +1,14 @@
+{
+  "task_id": "TASK-1",
+  "slug": "retry",
+  "stage": "coding",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T00:00Z", "ended": null, "result": null}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-1-retry",
+  "pr": null,
+  "depends_on": [],
+  "security_hints": [],
+  "blockers": []
+}

@@ -4,15 +4,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Iterator
-from typing import TYPE_CHECKING
 
 from .provider import Provider
 from .registry import resolve
 from .streaming import StreamEvent
 from .types import ChatRequest, ChatResponse
-
-if TYPE_CHECKING:
-    from .retry import RetryPolicy
 
 
 class Client:
@@ -29,43 +25,16 @@ class Client:
     Args:
         provider: A provider name string (resolved via registry) or a Provider
                   instance.
-        retry: Optional retry configuration. Pass a ``RetryPolicy`` instance for
-               fine-grained control, ``True`` for default policy, or ``False``
-               (default) to disable retries.
         **provider_kwargs: Keyword arguments forwarded to the provider factory
                            when ``provider`` is a string.
     """
 
-    def __init__(
-        self,
-        provider: str | Provider,
-        *,
-        retry: RetryPolicy | bool = False,
-        **provider_kwargs: object,
-    ) -> None:
+    def __init__(self, provider: str | Provider, **provider_kwargs: object) -> None:
         self._provider: Provider = (
             provider
             if isinstance(provider, Provider)
             else resolve(provider, **provider_kwargs)
         )
-
-        if retry is not False and retry is not None:
-            from .retry import RetryingProvider
-            from .retry import RetryPolicy as _RetryPolicy
-
-            policy: RetryPolicy = (
-                retry if isinstance(retry, _RetryPolicy) else _RetryPolicy()
-            )
-            self._provider = RetryingProvider(self._provider, policy)
-
-    @property
-    def provider_name(self) -> str:
-        """Return the name of the underlying provider.
-
-        Returns:
-            The provider name string (e.g. ``"anthropic"`` or ``"ollama"``).
-        """
-        return self._provider.name
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Send a chat completion request asynchronously.
