@@ -250,6 +250,14 @@ class TestRetryingProviderStream:
         assert provider.stream_calls == 1
 
     @pytest.mark.asyncio
+    async def test_stream_empty_yields_nothing(self) -> None:
+        """An empty stream (immediate StopAsyncIteration) yields nothing."""
+        provider = FakeProvider(stream_sequences=[[]])
+        retrying = RetryingProvider(provider, RetryPolicy())
+        events = [e async for e in retrying.stream(_make_request())]
+        assert events == []
+
+    @pytest.mark.asyncio
     async def test_stream_retries_error_before_first_yield(self) -> None:
         """Error before any content event triggers retry."""
         delta = TextDelta(text="ok")
