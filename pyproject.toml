@@ -21,6 +21,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/norreroute"]
 
+[project.optional-dependencies]
+otel = ["opentelemetry-api>=1.25"]
+
 [dependency-groups]
 dev = [
     "pytest>=8",
@@ -32,6 +35,8 @@ dev = [
     "mypy>=1.10",
     "anyio>=4",
     "pip-audit>=2.10.0",
+    "opentelemetry-sdk>=1.25",
+    "opentelemetry-api>=1.25",
 ]
 
 [tool.ruff]
