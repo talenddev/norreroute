@@ -11,7 +11,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 Or pass it at construction time:
 
 ```python
-from aiproxy import Client
+from norreroute import Client
 
 client = Client("anthropic", api_key="sk-ant-...")
 ```
@@ -48,8 +48,8 @@ Multi-turn tool use (sending results back):
 
 ```python
 import asyncio
-from aiproxy import Client
-from aiproxy.types import (
+from norreroute import Client
+from norreroute.types import (
     ChatRequest, Message, TextPart,
     ToolSpec, ToolUsePart, ToolResultPart,
 )
@@ -230,8 +230,8 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from typing import Any
 
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
-from aiproxy.types import ChatRequest, ChatResponse, TextPart, Usage
+from norreroute.streaming import StreamEnd, StreamEvent, TextDelta
+from norreroute.types import ChatRequest, ChatResponse, TextPart, Usage
 
 
 class MyProvider:
@@ -273,7 +273,7 @@ class MyProvider:
 **Option A — Direct registration (scripts, apps):**
 
 ```python
-from aiproxy.registry import register
+from norreroute.registry import register
 
 register("my-provider", lambda **kwargs: MyProvider(**kwargs))
 ```
@@ -282,7 +282,7 @@ register("my-provider", lambda **kwargs: MyProvider(**kwargs))
 
 ```python
 # At the bottom of your provider module:
-from aiproxy.registry import register
+from norreroute.registry import register
 
 register("my-provider", lambda **kwargs: MyProvider(**kwargs))
 ```
@@ -291,7 +291,7 @@ Import your module before constructing a `Client`:
 
 ```python
 import my_package.providers  # triggers self-registration
-from aiproxy import Client
+from norreroute import Client
 
 client = Client("my-provider")
 ```
@@ -320,7 +320,7 @@ aiproxy discovers this entry point automatically when `resolve` is called with `
 Map your API's error responses to aiproxy's error hierarchy:
 
 ```python
-from aiproxy.errors import AuthenticationError, ProviderError, RateLimitError
+from norreroute.errors import AuthenticationError, ProviderError, RateLimitError
 
 def _map_error(status: int, message: str) -> ProviderError:
     if status == 401:
@@ -333,7 +333,7 @@ def _map_error(status: int, message: str) -> ProviderError:
 ### Step 4: Verify Protocol Conformance
 
 ```python
-from aiproxy.provider import Provider
+from norreroute.provider import Provider
 
 provider = MyProvider()
 assert isinstance(provider, Provider), "Provider protocol not satisfied"

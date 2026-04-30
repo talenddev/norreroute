@@ -9,10 +9,10 @@ from typing import Any
 import httpx
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from aiproxy.errors import ProviderError
-from aiproxy.registry import register
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
-from aiproxy.types import (
+from norreroute.errors import ProviderError
+from norreroute.registry import register
+from norreroute.streaming import StreamEnd, StreamEvent, TextDelta
+from norreroute.types import (
     ChatRequest,
     ChatResponse,
     ContentPart,

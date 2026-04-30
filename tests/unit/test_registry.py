@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-import aiproxy.registry as registry_module
-from aiproxy.registry import register, resolve
-from aiproxy.types import ChatRequest, ChatResponse, TextPart, Usage
+import norreroute.registry as registry_module
+from norreroute.registry import register, resolve
+from norreroute.types import ChatRequest, ChatResponse, TextPart, Usage
 
 # ---------------------------------------------------------------------------
 # Minimal stub provider for registry tests
