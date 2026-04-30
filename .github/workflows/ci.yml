@@ -139,7 +139,7 @@ jobs:
       - name: Verify wheel installs cleanly
         run: |
           pip install dist/*.whl
-          python -c "import aiproxy; print('aiproxy import OK')"
+          python -c "import norreroute; print('norreroute import OK')"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
