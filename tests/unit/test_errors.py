@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aiproxy.errors import (
+from norreroute.errors import (
     AIProxyError,
     AuthenticationError,
     ConfigurationError,

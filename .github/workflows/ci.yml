@@ -1,14 +1,16 @@
 # CI pipeline for aiproxy
 #
 # Jobs:
-#   lint  — ruff check + mypy (Python 3.12)
-#   test  — pytest matrix (Python 3.12, 3.13) with coverage upload
-#   build — uv build + wheel smoke-test (Python 3.12, depends on lint + test)
+#   lint     — ruff check + mypy (Python 3.12)
+#   test     — pytest matrix (Python 3.12, 3.13) with coverage upload
+#   build    — uv build + wheel smoke-test (Python 3.12, depends on lint + test)
+#   publish  — publish to PyPI via twine (on release, depends on lint + test + build)
 #
 # Security:
 #   - All actions pinned to commit SHA digests (not mutable version tags)
 #   - Workflow-level permissions denied; each job grants only what it needs
 #   - uv tool-cache shared between steps via setup-uv built-in caching
+#   - PyPI publish requires PyPI_API_TOKEN secret and pypi environment
 
 name: CI
 
@@ -17,6 +19,8 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  release:
+    types: [published, created]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -135,11 +139,39 @@ jobs:
       - name: Verify wheel installs cleanly
         run: |
           pip install dist/*.whl
-          python -c "import aiproxy; print('aiproxy import OK')"
+          python -c "import norreroute; print('norreroute import OK')"
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: build-artifacts
           path: dist/
           retention-days: 7
+
+  # ---------------------------------------------------------------------------
+  # publish — publish to PyPI (main branch only)
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment: pypi
+    if: github.event_name == 'release' && github.event.action == 'published'
+    needs: [lint, test, build]
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: dist/
+
+      - name: Publish package distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          user: __token__
+          password: ${{ secrets.PyPI_API_TOKEN }}

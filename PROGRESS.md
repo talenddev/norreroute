@@ -1,22 +1,18 @@
 # Build Progress
 
-**Project:** aiproxy
+**Project:** norreroute v0.2
 **Started:** 2026-04-30
-**Status:** Complete
+**Status:** In Progress
 
 ## Task Summary
 
 | # | Task | Stage | Coverage | Review iter | Test iter | Depends on |
 |---|------|-------|----------|-------------|-----------|------------|
-| 1 | Package scaffold | done | N/A (stubs) | 0 | 0 | — |
-| 2 | Core data model | done | 100% | 0 | 0 | TASK-1 |
-| 3 | Provider protocol + Client | done | 100% client, 94% registry | 0 | 0 | TASK-2 |
-| 4 | Anthropic provider | done | 92% | 0 | 0 | TASK-3 |
-| 5 | Ollama provider | done | 89% | 0 | 0 | TASK-3 |
-| 6 | Integration tests | done | 93% client | 0 | 0 | TASK-4, TASK-5 |
-| 7 | Tool-call support | done | 92% anthropic, 89% ollama | 0 | 0 | TASK-6 |
-
-**Overall coverage: 94% (82 tests)**
+| 1 | Retry / Exponential Backoff | pending | — | 0 | 0 | — |
+| 2 | Token Counting / Cost Estimation | pending | — | 0 | 0 | — |
+| 3 | Structured Output / JSON-Mode | pending | — | 0 | 0 | — |
+| 4 | Observability (OpenTelemetry) | pending | — | 0 | 0 | — |
+| 5 | Conversation / Session Persistence | pending | — | 0 | 0 | — |
 
 ## Blockers
 
@@ -24,5 +20,5 @@ None.
 
 ## Security debt
 
-- MEDIUM CICD-001: GitHub Actions pinned to mutable tags, not SHA digests
-- LOW APP-002: OllamaSettings.base_url not validated as URL (SSRF hardening)
+- MEDIUM CICD-001: GitHub Actions pinned to mutable tags, not SHA digests (carried from v0.1)
+- LOW APP-002: OllamaSettings.base_url not validated as URL (carried from v0.1)

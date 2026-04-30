@@ -15,11 +15,11 @@ import httpx
 import pytest
 import respx
 
-from aiproxy.client import Client
-from aiproxy.providers.anthropic import AnthropicProvider
-from aiproxy.providers.ollama import OllamaProvider
-from aiproxy.streaming import StreamEnd, TextDelta
-from aiproxy.types import (
+from norreroute.client import Client
+from norreroute.providers.anthropic import AnthropicProvider
+from norreroute.providers.ollama import OllamaProvider
+from norreroute.streaming import StreamEnd, TextDelta
+from norreroute.types import (
     ChatRequest,
     ChatResponse,
     Message,

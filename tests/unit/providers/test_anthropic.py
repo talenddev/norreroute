@@ -9,10 +9,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import anthropic
 import pytest
 
-from aiproxy.errors import AuthenticationError, ProviderError, RateLimitError
-from aiproxy.providers.anthropic import AnthropicProvider
-from aiproxy.streaming import StreamEnd, TextDelta
-from aiproxy.types import (
+from norreroute.errors import AuthenticationError, ProviderError, RateLimitError
+from norreroute.providers.anthropic import AnthropicProvider
+from norreroute.streaming import StreamEnd, TextDelta
+from norreroute.types import (
     ChatRequest,
     ChatResponse,
     Message,
@@ -288,7 +288,7 @@ async def test_chat_tool_result_part_in_messages_accepted(
     provider: AnthropicProvider,
 ) -> None:
     """ToolResultPart in message content should be serialized without error."""
-    from aiproxy.types import ToolResultPart
+    from norreroute.types import ToolResultPart
 
     mock_response = _make_anthropic_response()
     provider._client.messages.create = AsyncMock(return_value=mock_response)

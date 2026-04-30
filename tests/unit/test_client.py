@@ -6,11 +6,11 @@ from collections.abc import AsyncIterator
 
 import pytest
 
-import aiproxy.registry as registry_module
-from aiproxy.client import Client
-from aiproxy.provider import Provider
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
-from aiproxy.types import ChatRequest, ChatResponse, Message, TextPart, Usage
+import norreroute.registry as registry_module
+from norreroute.client import Client
+from norreroute.provider import Provider
+from norreroute.streaming import StreamEnd, StreamEvent, TextDelta
+from norreroute.types import ChatRequest, ChatResponse, Message, TextPart, Usage
 
 # ---------------------------------------------------------------------------
 # Concrete stub provider (must satisfy isinstance(..., Provider) check)

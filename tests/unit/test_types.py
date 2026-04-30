@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta, ToolCallDelta
-from aiproxy.types import (
+from norreroute.streaming import StreamEnd, StreamEvent, TextDelta, ToolCallDelta
+from norreroute.types import (
     ChatRequest,
     ChatResponse,
     ContentPart,

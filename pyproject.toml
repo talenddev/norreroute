@@ -1,6 +1,6 @@
 [project]
-name = "aiproxy"
-version = "0.1.0"
+name = "norreroute"
+version = "0.1.1"
 description = "A pragmatic, provider-agnostic Python library for calling LLMs"
 readme = "README.md"
 license = {text = "MIT"}
@@ -19,7 +19,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/aiproxy"]
+packages = ["src/norreroute"]
 
 [dependency-groups]
 dev = [
@@ -43,7 +43,7 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 ignore = ["B017"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["aiproxy"]
+known-first-party = ["norreroute"]
 
 [tool.mypy]
 python_version = "3.12"
@@ -51,7 +51,7 @@ strict = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
-packages = ["aiproxy"]
+packages = ["norreroute"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
