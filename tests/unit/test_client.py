@@ -12,7 +12,6 @@ from aiproxy.provider import Provider
 from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
 from aiproxy.types import ChatRequest, ChatResponse, Message, TextPart, Usage
 
-
 # ---------------------------------------------------------------------------
 # Concrete stub provider (must satisfy isinstance(..., Provider) check)
 # ---------------------------------------------------------------------------
