@@ -21,7 +21,7 @@ def full_jitter(
     Returns:
         A randomised delay in seconds.
     """
-    cap = min(max_delay, initial_delay * (multiplier ** attempt))
+    cap = min(max_delay, initial_delay * (multiplier**attempt))
     return random.uniform(0, cap)
 
 

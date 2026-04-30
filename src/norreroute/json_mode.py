@@ -43,9 +43,7 @@ def _parse_json(text: str, *, strict: bool) -> dict[str, Any] | None:
         return parsed
     except json.JSONDecodeError as exc:
         if strict:
-            raise JSONValidationError(
-                f"Response is not valid JSON: {exc}"
-            ) from exc
+            raise JSONValidationError(f"Response is not valid JSON: {exc}") from exc
         return None
 
 

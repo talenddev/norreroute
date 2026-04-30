@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from . import providers as _providers  # noqa: F401 — triggers self-registration
 from .client import Client
+from .conversation import Conversation, TrimStrategy
 from .errors import (
     ConversationOverflowError,
     JSONValidationError,
@@ -17,6 +18,8 @@ __version__ = "0.2.0"
 
 __all__ = [
     "Client",
+    "Conversation",
+    "TrimStrategy",
     "RetryPolicy",
     "RetryingProvider",
     "ModelPrice",

@@ -132,9 +132,7 @@ class RetryingProvider:
             attempt += 1
             first_yielded = False
             # Obtain the async generator so we can call aclose() on it
-            agen: AsyncGenerator[StreamEvent, None] = (
-                self._inner.stream(request)  # type: ignore[assignment]
-            )
+            agen: AsyncGenerator[StreamEvent, None] = self._inner.stream(request)  # type: ignore[assignment]
             try:
                 # Peek the first event inside the retry boundary
                 try:

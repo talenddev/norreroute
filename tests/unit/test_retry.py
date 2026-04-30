@@ -17,6 +17,7 @@ from norreroute.types import ChatRequest, ChatResponse, Message, TextPart, Usage
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_request() -> ChatRequest:
     return ChatRequest(
         model="test-model",
@@ -82,6 +83,7 @@ class FakeProvider:
 # RetryPolicy unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestRetryPolicy:
     def test_default_fields(self) -> None:
         policy = RetryPolicy()
@@ -139,6 +141,7 @@ class TestRetryPolicy:
 # ---------------------------------------------------------------------------
 # RetryingProvider.chat tests
 # ---------------------------------------------------------------------------
+
 
 class TestRetryingProviderChat:
     @pytest.mark.asyncio
@@ -237,6 +240,7 @@ class TestRetryingProviderChat:
 # ---------------------------------------------------------------------------
 # RetryingProvider.stream tests
 # ---------------------------------------------------------------------------
+
 
 class TestRetryingProviderStream:
     @pytest.mark.asyncio
@@ -354,6 +358,7 @@ class TestRetryingProviderStream:
 # ---------------------------------------------------------------------------
 # Client wiring tests
 # ---------------------------------------------------------------------------
+
 
 class TestClientRetryWiring:
     def test_no_retry_kwarg_uses_bare_provider(self) -> None:

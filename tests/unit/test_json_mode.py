@@ -238,7 +238,9 @@ class TestJsonChatTypedDictCoercion:
         provider = FakeProvider("fake", '{"x": 10, "y": 20}')
         client = Client(provider=provider)
         resp, result = await json_chat(
-            client, _make_request(), schema=_PointTypedDict  # type: ignore[type-abstract]
+            client,
+            _make_request(),
+            schema=_PointTypedDict,  # type: ignore[type-abstract]
         )
         assert isinstance(result, dict)
         assert result["x"] == 10
