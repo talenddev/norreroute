@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from contextlib import asynccontextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -20,9 +19,7 @@ from aiproxy.types import (
     TextPart,
     ToolSpec,
     ToolUsePart,
-    Usage,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -142,7 +139,9 @@ async def test_chat_without_system_omits_param(provider: AnthropicProvider) -> N
     assert "system" not in call_kwargs
 
 
-async def test_chat_with_tools_returns_tool_use_part(provider: AnthropicProvider) -> None:
+async def test_chat_with_tools_returns_tool_use_part(
+    provider: AnthropicProvider,
+) -> None:
     tool_use = {"id": "call_abc", "name": "get_weather", "input": {"city": "London"}}
     mock_response = _make_anthropic_response(stop_reason="tool_use", tool_use=tool_use)
     provider._client.messages.create = AsyncMock(return_value=mock_response)
@@ -164,7 +163,9 @@ async def test_chat_with_tools_returns_tool_use_part(provider: AnthropicProvider
 # ---------------------------------------------------------------------------
 
 
-async def test_chat_401_raises_authentication_error(provider: AnthropicProvider) -> None:
+async def test_chat_401_raises_authentication_error(
+    provider: AnthropicProvider,
+) -> None:
     exc = anthropic.AuthenticationError(
         message="invalid api key",
         response=MagicMock(status_code=401),
@@ -211,7 +212,9 @@ async def test_chat_500_raises_provider_error(provider: AnthropicProvider) -> No
 # ---------------------------------------------------------------------------
 
 
-async def test_stream_yields_text_delta_and_stream_end(provider: AnthropicProvider) -> None:
+async def test_stream_yields_text_delta_and_stream_end(
+    provider: AnthropicProvider,
+) -> None:
     """Mock the messages.stream context manager."""
     final_msg = _make_anthropic_response(input_tokens=10, output_tokens=5)
 
@@ -260,3 +263,55 @@ async def test_aclose_closes_client(provider: AnthropicProvider) -> None:
     provider._client.close = AsyncMock()
     await provider.aclose()
     provider._client.close.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# TASK-7: Tool-call support — additional tests
+# ---------------------------------------------------------------------------
+
+
+async def test_chat_tool_use_finish_reason_is_tool_use(
+    provider: AnthropicProvider,
+) -> None:
+    """Verify finish_reason=="tool_use" when stop_reason is tool_use."""
+    tool_use = {"id": "call_xyz", "name": "get_weather", "input": {"city": "Tokyo"}}
+    mock_response = _make_anthropic_response(stop_reason="tool_use", tool_use=tool_use)
+    provider._client.messages.create = AsyncMock(return_value=mock_response)
+
+    tools = [ToolSpec(name="get_weather", description="Get weather", parameters={})]
+    response = await provider.chat(_make_request(tools=tools))
+
+    assert response.finish_reason == "tool_use"
+
+
+async def test_chat_tool_result_part_in_messages_accepted(
+    provider: AnthropicProvider,
+) -> None:
+    """ToolResultPart in message content should be serialized without error."""
+    from aiproxy.types import ToolResultPart
+
+    mock_response = _make_anthropic_response()
+    provider._client.messages.create = AsyncMock(return_value=mock_response)
+
+    # Message with a tool result — simulates a multi-turn tool-use conversation
+    request = ChatRequest(
+        model="claude-3-haiku-20240307",
+        messages=[
+            Message(
+                role="user",
+                content=[
+                    ToolResultPart(tool_use_id="call_1", content='{"temp": 20}'),
+                ],
+            )
+        ],
+        max_tokens=128,
+    )
+    # Should not raise — ToolResultPart must serialize correctly
+    response = await provider.chat(request)
+    assert isinstance(response, ChatResponse)
+
+    call_kwargs = provider._client.messages.create.call_args.kwargs
+    messages = call_kwargs["messages"]
+    # The ToolResultPart should appear as a tool_result content block
+    assert messages[0]["content"][0]["type"] == "tool_result"
+    assert messages[0]["content"][0]["tool_use_id"] == "call_1"

@@ -208,7 +208,11 @@ async def test_stream_yields_text_deltas_and_stream_end(
     ndjson = "\n".join(json.dumps(c) for c in chunks)
 
     respx.post(f"{BASE_URL}/api/chat").mock(
-        return_value=httpx.Response(200, content=ndjson.encode(), headers={"content-type": "application/x-ndjson"})
+        return_value=httpx.Response(
+            200,
+            content=ndjson.encode(),
+            headers={"content-type": "application/x-ndjson"},
+        )
     )
 
     events = []
@@ -241,3 +245,67 @@ async def test_aclose_closes_client() -> None:
     provider = OllamaProvider(base_url=BASE_URL)
     # Should not raise
     await provider.aclose()
+
+# ---------------------------------------------------------------------------
+# TASK-7: Tool-call support — additional tests
+# ---------------------------------------------------------------------------
+
+
+@respx.mock
+async def test_chat_tool_use_finish_reason_is_tool_use(
+    provider: OllamaProvider,
+) -> None:
+    """Verify finish_reason=="tool_use" when response has tool_calls."""
+    tool_calls = [
+        {
+            "id": "call_w1",
+            "function": {"name": "get_weather", "arguments": {"city": "Berlin"}},
+        }
+    ]
+    body = _chat_response_body(tool_calls=tool_calls, done_reason="stop")
+    respx.post(f"{BASE_URL}/api/chat").mock(
+        return_value=httpx.Response(200, json=body)
+    )
+
+    tools = [ToolSpec(name="get_weather", description="Get weather", parameters={})]
+    response = await provider.chat(_make_request(tools=tools))
+
+    assert response.finish_reason == "tool_use"
+    assert isinstance(response.content[0], ToolUsePart)
+    assert response.content[0].arguments == {"city": "Berlin"}
+
+
+@respx.mock
+async def test_chat_tool_result_part_in_messages_accepted(
+    provider: OllamaProvider,
+) -> None:
+    """ToolResultPart in message content should be serialized without error."""
+    from aiproxy.types import ToolResultPart
+
+    captured_body: list[dict] = []
+
+    def capture(request: httpx.Request) -> httpx.Response:
+        captured_body.append(json.loads(request.content))
+        return httpx.Response(200, json=_chat_response_body())
+
+    respx.post(f"{BASE_URL}/api/chat").mock(side_effect=capture)
+
+    request = ChatRequest(
+        model="llama3",
+        messages=[
+            Message(
+                role="tool",
+                content=[
+                    ToolResultPart(tool_use_id="call_1", content='{"temp": 20}'),
+                ],
+            )
+        ],
+        max_tokens=64,
+    )
+    response = await provider.chat(request)
+    assert isinstance(response, ChatResponse)
+
+    # The ToolResultPart should be serialized as a tool role message
+    messages = captured_body[0]["messages"]
+    assert messages[0]["role"] == "tool"
+    assert messages[0]["content"] == '{"temp": 20}'
