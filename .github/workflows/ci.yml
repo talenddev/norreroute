@@ -20,7 +20,7 @@ on:
   pull_request:
     branches: [main, develop]
   release:
-    types: [published]
+    types: [published, created]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -139,7 +139,7 @@ jobs:
       - name: Verify wheel installs cleanly
         run: |
           pip install dist/*.whl
-          python -c "import aiproxy; print('aiproxy import OK')"
+          python -c "import norreroute; print('norreroute import OK')"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
@@ -157,7 +157,7 @@ jobs:
     permissions:
       contents: read
     environment: pypi
-    if: github.event_name == 'release'
+    if: github.event_name == 'release' && github.event.action == 'published'
     needs: [lint, test, build]
 
     steps:
@@ -165,13 +165,13 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@fa1ae88eabcf1cd63a63d6f40e22e6d93d488b73  # v4
+        uses: actions/download-artifact@v4
         with:
           name: build-artifacts
           path: dist/
 
       - name: Publish package distributions to PyPI
-        uses: pypa/gh-action-pypi-publish@ec4db0b4ddad77b93c7d315c0b01d4502406459f  # v1.10.0
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
           password: ${{ secrets.PyPI_API_TOKEN }}

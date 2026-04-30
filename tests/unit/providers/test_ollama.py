@@ -8,10 +8,10 @@ import httpx
 import pytest
 import respx
 
-from aiproxy.errors import ProviderError
-from aiproxy.providers.ollama import OllamaProvider
-from aiproxy.streaming import StreamEnd, TextDelta
-from aiproxy.types import (
+from norreroute.errors import ProviderError
+from norreroute.providers.ollama import OllamaProvider
+from norreroute.streaming import StreamEnd, TextDelta
+from norreroute.types import (
     ChatRequest,
     ChatResponse,
     Message,
@@ -277,7 +277,7 @@ async def test_chat_tool_result_part_in_messages_accepted(
     provider: OllamaProvider,
 ) -> None:
     """ToolResultPart in message content should be serialized without error."""
-    from aiproxy.types import ToolResultPart
+    from norreroute.types import ToolResultPart
 
     captured_body: list[dict] = []
 

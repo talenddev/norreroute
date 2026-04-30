@@ -3,7 +3,7 @@
 ## `Client`
 
 ```python
-from aiproxy import Client
+from norreroute import Client
 ```
 
 The main entry point. Accepts either a provider name (resolved via the registry) or a
@@ -120,7 +120,7 @@ Releases the provider's underlying resources (e.g. closes the httpx connection p
 ## `Provider` Protocol
 
 ```python
-from aiproxy.provider import Provider
+from norreroute.provider import Provider
 ```
 
 The contract every provider must satisfy. Defined as `typing.Protocol` with `@runtime_checkable`, so `isinstance(obj, Provider)` works without inheritance.
@@ -149,7 +149,7 @@ class Provider(Protocol):
 ## Types
 
 ```python
-from aiproxy.types import (
+from norreroute.types import (
     ChatRequest, ChatResponse,
     Message, ContentPart,
     TextPart, ToolUsePart, ToolResultPart,
@@ -317,7 +317,7 @@ Token counts for a completion. For Ollama, `input_tokens` maps to `prompt_eval_c
 ## Streaming Events
 
 ```python
-from aiproxy.streaming import TextDelta, ToolCallDelta, StreamEnd, StreamEvent
+from norreroute.streaming import TextDelta, ToolCallDelta, StreamEnd, StreamEvent
 ```
 
 `StreamEvent = TextDelta | ToolCallDelta | StreamEnd`
@@ -376,7 +376,7 @@ Signals the end of a streaming response. Always the last event in a stream.
 ## Errors
 
 ```python
-from aiproxy.errors import (
+from norreroute.errors import (
     AIProxyError,
     ConfigurationError,
     ProviderError,
@@ -445,7 +445,7 @@ Subclass of `AIProxyError`. Raised when a tool receives invalid arguments. Not c
 ## Registry
 
 ```python
-from aiproxy.registry import register, resolve
+from norreroute.registry import register, resolve
 ```
 
 ---
@@ -464,7 +464,7 @@ Registers a provider factory under the given name. Overwrites any existing regis
 | `factory` | `Callable[..., Provider]` | A callable that accepts keyword arguments and returns a `Provider` |
 
 ```python
-from aiproxy.registry import register
+from norreroute.registry import register
 
 register("my-provider", lambda **kwargs: MyProvider(**kwargs))
 ```
@@ -487,7 +487,7 @@ Looks up a provider by name and instantiates it. If the name is not found in the
 Raises `KeyError` if the provider is not found after entry-point discovery.
 
 ```python
-from aiproxy.registry import resolve
+from norreroute.registry import resolve
 
 provider = resolve("anthropic", api_key="sk-ant-...")
 ```

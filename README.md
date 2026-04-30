@@ -1,13 +1,13 @@
-# aiproxy
+# norreroute
 
 A provider-agnostic Python library for calling LLMs. Wraps Anthropic Claude and Ollama behind a single `Client` interface so switching providers is a one-line change, not a refactor.
 
 ## Installation
 
 ```bash
-uv add aiproxy
+uv add norreroute
 # or
-pip install aiproxy
+pip install norreroute
 ```
 
 Requires Python 3.12+.
@@ -18,8 +18,8 @@ Requires Python 3.12+.
 
 ```python
 import asyncio
-from aiproxy import Client
-from aiproxy.types import ChatRequest, Message, TextPart
+from norreroute import Client
+from norreroute.types import ChatRequest, Message, TextPart
 
 async def main() -> None:
     client = Client("anthropic")  # reads ANTHROPIC_API_KEY from env
@@ -42,8 +42,8 @@ asyncio.run(main())
 ### Non-streaming (Ollama)
 
 ```python
-from aiproxy import Client
-from aiproxy.types import ChatRequest, Message, TextPart
+from norreroute import Client
+from norreroute.types import ChatRequest, Message, TextPart
 
 client = Client("ollama")  # defaults to http://localhost:11434
 
@@ -62,9 +62,9 @@ print(response.content[0].text)
 
 ```python
 import asyncio
-from aiproxy import Client
-from aiproxy.streaming import StreamEnd, TextDelta
-from aiproxy.types import ChatRequest, Message, TextPart
+from norreroute import Client
+from norreroute.streaming import StreamEnd, TextDelta
+from norreroute.types import ChatRequest, Message, TextPart
 
 async def main() -> None:
     client = Client("anthropic")
@@ -91,8 +91,8 @@ asyncio.run(main())
 
 ```python
 import asyncio
-from aiproxy import Client
-from aiproxy.types import ChatRequest, Message, TextPart, ToolSpec, ToolUsePart
+from norreroute import Client
+from norreroute.types import ChatRequest, Message, TextPart, ToolSpec, ToolUsePart
 
 async def main() -> None:
     client = Client("anthropic")
@@ -160,9 +160,9 @@ Implement the `Provider` protocol and register a factory:
 
 ```python
 from collections.abc import AsyncIterator
-from aiproxy.registry import register
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
-from aiproxy.types import ChatRequest, ChatResponse, TextPart, Usage
+from norreroute.registry import register
+from norreroute.streaming import StreamEnd, StreamEvent, TextDelta
+from norreroute.types import ChatRequest, ChatResponse, TextPart, Usage
 
 
 class MyProvider:
@@ -204,7 +204,7 @@ my-provider = "my_package.providers:factory"
 ## Error Handling
 
 ```python
-from aiproxy.errors import (
+from norreroute.errors import (
     AIProxyError,
     AuthenticationError,
     ConfigurationError,
