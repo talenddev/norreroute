@@ -193,6 +193,14 @@ class TestEstimateCostErrors:
         assert est.input_cost_usd == 0.0
         assert est.output_tokens == 1_000
 
+    def test_prefix_match_explicit_pricing(self) -> None:
+        """Prefix match also works in the caller-supplied pricing table."""
+        custom = {"my-base": ModelPrice(5.0, 10.0)}
+        resp = _make_response("my-base:instruct", 1_000_000, 1_000_000)
+        est = estimate_cost(resp, custom)
+        assert abs(est.input_cost_usd - 5.0) < 1e-9
+        assert abs(est.output_cost_usd - 10.0) < 1e-9
+
     def test_missing_usage_sets_is_estimate(self) -> None:
         """Zero-usage response triggers approximation, sets is_estimate=True."""
         resp = ChatResponse(
