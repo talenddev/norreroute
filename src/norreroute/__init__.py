@@ -9,8 +9,9 @@ from .errors import (
     JSONValidationError,
     UnknownModelError,
 )
+from .json_mode import json_chat
 from .pricing import CostEstimate, ModelPrice, count_tokens_approx, estimate_cost
-from .retry import RetryingProvider, RetryPolicy
+from .retry import RetryPolicy, RetryingProvider
 
 __version__ = "0.2.0"
 
@@ -25,5 +26,6 @@ __all__ = [
     "UnknownModelError",
     "JSONValidationError",
     "ConversationOverflowError",
+    "json_chat",
     "__version__",
 ]
