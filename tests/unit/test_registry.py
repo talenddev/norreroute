@@ -7,8 +7,6 @@ import pytest
 import aiproxy.registry as registry_module
 from aiproxy.registry import register, resolve
 from aiproxy.types import ChatRequest, ChatResponse, TextPart, Usage
-from aiproxy.streaming import StreamEvent
-
 
 # ---------------------------------------------------------------------------
 # Minimal stub provider for registry tests
