@@ -142,9 +142,7 @@ async def test_chat_with_tools_returns_tool_use_part(provider: OllamaProvider) -
         }
     ]
     body = _chat_response_body(tool_calls=tool_calls, done_reason="stop")
-    respx.post(f"{BASE_URL}/api/chat").mock(
-        return_value=httpx.Response(200, json=body)
-    )
+    respx.post(f"{BASE_URL}/api/chat").mock(return_value=httpx.Response(200, json=body))
 
     tools = [ToolSpec(name="get_weather", description="Get weather", parameters={})]
     response = await provider.chat(_make_request(tools=tools))
@@ -246,6 +244,7 @@ async def test_aclose_closes_client() -> None:
     # Should not raise
     await provider.aclose()
 
+
 # ---------------------------------------------------------------------------
 # TASK-7: Tool-call support — additional tests
 # ---------------------------------------------------------------------------
@@ -263,9 +262,7 @@ async def test_chat_tool_use_finish_reason_is_tool_use(
         }
     ]
     body = _chat_response_body(tool_calls=tool_calls, done_reason="stop")
-    respx.post(f"{BASE_URL}/api/chat").mock(
-        return_value=httpx.Response(200, json=body)
-    )
+    respx.post(f"{BASE_URL}/api/chat").mock(return_value=httpx.Response(200, json=body))
 
     tools = [ToolSpec(name="get_weather", description="Get weather", parameters={})]
     response = await provider.chat(_make_request(tools=tools))

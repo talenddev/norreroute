@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta, ToolCallDelta
 from aiproxy.types import (
     ChatRequest,
     ChatResponse,
@@ -15,8 +16,6 @@ from aiproxy.types import (
     ToolUsePart,
     Usage,
 )
-from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta, ToolCallDelta
-
 
 # ---------------------------------------------------------------------------
 # TextPart

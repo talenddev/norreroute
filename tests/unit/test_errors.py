@@ -16,7 +16,9 @@ from aiproxy.errors import (
 
 
 def test_provider_error_attributes() -> None:
-    err = ProviderError("something went wrong", provider="anthropic", status=500, raw={"error": "oops"})
+    err = ProviderError(
+        "something went wrong", provider="anthropic", status=500, raw={"error": "oops"}
+    )
     assert str(err) == "something went wrong"
     assert err.provider == "anthropic"
     assert err.status == 500
