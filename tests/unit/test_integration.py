@@ -38,9 +38,7 @@ OLLAMA_BASE = "http://localhost:11434"
 def chat_request() -> ChatRequest:
     return ChatRequest(
         model="test-model",
-        messages=[
-            Message(role="user", content=[TextPart(text="What is 2+2?")])
-        ],
+        messages=[Message(role="user", content=[TextPart(text="What is 2+2?")])],
         system="You are a helpful math assistant.",
         max_tokens=128,
     )
