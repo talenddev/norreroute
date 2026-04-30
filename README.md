@@ -1,63 +1,51 @@
 # aiproxy
 
-A pragmatic, provider-agnostic Python library for calling LLMs. Starts with Anthropic Claude and Ollama; designed so adding OpenAI or Gemini later is mechanical, not architectural.
-
-## Providers
-
-| Provider | Status | Transport |
-|---|---|---|
-| Anthropic Claude | Supported | anthropic SDK |
-| Ollama | Supported | httpx (direct REST) |
-| OpenAI / Gemini | Not built | Planned |
-
-## Requirements
-
-- Python 3.12+
-- [uv](https://docs.astral.sh/uv/)
+A provider-agnostic Python library for calling LLMs. Wraps Anthropic Claude and Ollama behind a single `Client` interface so switching providers is a one-line change, not a refactor.
 
 ## Installation
 
 ```bash
 uv add aiproxy
+# or
+pip install aiproxy
 ```
+
+Requires Python 3.12+.
 
 ## Quick Start
 
-### Non-streaming (async)
+### Non-streaming (Anthropic)
 
 ```python
 import asyncio
 from aiproxy import Client
 from aiproxy.types import ChatRequest, Message, TextPart
 
-async def main():
-    client = Client("anthropic", api_key="sk-ant-...")
-    # or: client = Client("anthropic")  # reads ANTHROPIC_API_KEY from env
+async def main() -> None:
+    client = Client("anthropic")  # reads ANTHROPIC_API_KEY from env
 
     request = ChatRequest(
         model="claude-3-haiku-20240307",
-        messages=[
-            Message(role="user", content=[TextPart(text="What is 2 + 2?")])
-        ],
+        messages=[Message(role="user", content=[TextPart(text="What is 2 + 2?")])],
         system="You are a helpful math assistant.",
         max_tokens=256,
     )
 
     response = await client.chat(request)
-    print(response.content[0].text)   # "4"
+    print(response.content[0].text)       # "4"
     print(response.usage.output_tokens)
     await client.aclose()
 
 asyncio.run(main())
 ```
 
-### Sync wrapper (scripts / CLIs)
+### Non-streaming (Ollama)
 
 ```python
 from aiproxy import Client
 from aiproxy.types import ChatRequest, Message, TextPart
 
-client = Client("ollama", base_url="http://localhost:11434")
+client = Client("ollama")  # defaults to http://localhost:11434
 
 request = ChatRequest(
     model="llama3",
@@ -73,9 +61,19 @@ print(response.content[0].text)
 ### Streaming
 
 ```python
-async def stream_example():
+import asyncio
+from aiproxy import Client
+from aiproxy.streaming import StreamEnd, TextDelta
+from aiproxy.types import ChatRequest, Message, TextPart
+
+async def main() -> None:
     client = Client("anthropic")
-    from aiproxy.streaming import TextDelta, StreamEnd
+
+    request = ChatRequest(
+        model="claude-3-haiku-20240307",
+        messages=[Message(role="user", content=[TextPart(text="Count to five.")])],
+        max_tokens=128,
+    )
 
     async for event in client.stream(request):
         if isinstance(event, TextDelta):
@@ -83,35 +81,50 @@ async def stream_example():
         elif isinstance(event, StreamEnd):
             print()
             break
+
+    await client.aclose()
+
+asyncio.run(main())
 ```
 
 ### Tool calling
 
 ```python
+import asyncio
+from aiproxy import Client
 from aiproxy.types import ChatRequest, Message, TextPart, ToolSpec, ToolUsePart
 
-weather_tool = ToolSpec(
-    name="get_weather",
-    description="Get the current weather for a city",
-    parameters={
-        "type": "object",
-        "properties": {"city": {"type": "string"}},
-        "required": ["city"],
-    },
-)
+async def main() -> None:
+    client = Client("anthropic")
 
-request = ChatRequest(
-    model="claude-3-haiku-20240307",
-    messages=[Message(role="user", content=[TextPart(text="What's the weather in Paris?")])],
-    tools=[weather_tool],
-    max_tokens=256,
-)
+    weather_tool = ToolSpec(
+        name="get_weather",
+        description="Get the current weather for a city",
+        parameters={
+            "type": "object",
+            "properties": {"city": {"type": "string"}},
+            "required": ["city"],
+        },
+    )
 
-response = await client.chat(request)
-for part in response.content:
-    if isinstance(part, ToolUsePart):
-        print(f"Tool call: {part.name}({part.arguments})")
-        # {"city": "Paris"}
+    request = ChatRequest(
+        model="claude-3-haiku-20240307",
+        messages=[
+            Message(role="user", content=[TextPart(text="What's the weather in Paris?")])
+        ],
+        tools=[weather_tool],
+        max_tokens=256,
+    )
+
+    response = await client.chat(request)
+    for part in response.content:
+        if isinstance(part, ToolUsePart):
+            print(f"Tool: {part.name}, args: {part.arguments}")
+            # Tool: get_weather, args: {'city': 'Paris'}
+
+    await client.aclose()
+
+asyncio.run(main())
 ```
 
 ## Configuration
@@ -139,71 +152,106 @@ client = Client("anthropic", api_key="sk-ant-...", timeout_s=30.0)
 client = Client("ollama", base_url="http://gpu-host:11434")
 ```
 
-## Provider registration
+A `.env` file in the working directory is read automatically by each provider.
 
-Providers self-register on import. You can also register third-party providers:
+## Adding a Custom Provider
+
+Implement the `Provider` protocol and register a factory:
 
 ```python
+from collections.abc import AsyncIterator
 from aiproxy.registry import register
+from aiproxy.streaming import StreamEnd, StreamEvent, TextDelta
+from aiproxy.types import ChatRequest, ChatResponse, TextPart, Usage
 
-register("my-provider", MyProviderFactory)
-client = Client("my-provider", some_kwarg="value")
+
+class MyProvider:
+    name = "my-provider"
+
+    async def chat(self, request: ChatRequest) -> ChatResponse:
+        # call your API here
+        return ChatResponse(
+            model=request.model,
+            content=[TextPart(text="response text")],
+            finish_reason="stop",
+            usage=Usage(input_tokens=10, output_tokens=5),
+            raw={},
+        )
+
+    async def _stream_impl(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+        yield TextDelta(text="response text")
+        yield StreamEnd(finish_reason="stop", usage=None)
+
+    def stream(self, request: ChatRequest) -> AsyncIterator[StreamEvent]:
+        return self._stream_impl(request)
+
+    async def aclose(self) -> None:
+        pass
+
+
+register("my-provider", lambda **kwargs: MyProvider())
+
+client = Client("my-provider")
 ```
 
-Or declare an entry point in your package:
+Or declare an entry point so your package registers automatically on install:
 
 ```toml
 [project.entry-points."aiproxy.providers"]
 my-provider = "my_package.providers:factory"
 ```
 
-## Error handling
+## Error Handling
 
 ```python
-from aiproxy.errors import AuthenticationError, RateLimitError, ProviderError
+from aiproxy.errors import (
+    AIProxyError,
+    AuthenticationError,
+    ConfigurationError,
+    ProviderError,
+    RateLimitError,
+    TimeoutError_,
+)
 
 try:
     response = await client.chat(request)
 except AuthenticationError as e:
-    print(f"Bad API key: {e}")
+    print(f"Bad API key — provider={e.provider}, status={e.status}")
 except RateLimitError as e:
-    print(f"Rate limited (status {e.status})")
+    print(f"Rate limited — retry after back-off")
+except TimeoutError_ as e:
+    print(f"Request timed out")
 except ProviderError as e:
-    print(f"Provider error from {e.provider}: {e}")
+    print(f"Provider error from {e.provider}: HTTP {e.status}")
+except ConfigurationError as e:
+    print(f"Bad configuration: {e}")
 ```
 
-## Development
+`TimeoutError_` has a trailing underscore to avoid shadowing the built-in `TimeoutError`.
 
-```bash
-# Install dependencies (including dev)
-uv sync
+## Provider Comparison
 
-# Run tests
-uv run pytest
+| Feature | Anthropic | Ollama |
+|---|---|---|
+| Non-streaming chat | Yes | Yes |
+| Streaming | Yes | Yes |
+| Tool calling | Yes | Yes (models that support it) |
+| `system` prompt | Native top-level param | Prepended as `system` role message |
+| `temperature` | Yes | Yes |
+| `max_tokens` | Yes | Yes (mapped to `num_predict`) |
+| `stop` sequences | Yes | Yes |
+| Auth | `ANTHROPIC_API_KEY` | None (local) |
+| Transport | Anthropic SDK | httpx direct REST |
+| `finish_reason` values | `stop`, `length`, `tool_use` | `stop`, `length`, `tool_use` |
 
-# Run tests with coverage
-uv run pytest --cov=src --cov-report=term-missing
+## Documentation
 
-# Lint
-uv run ruff check src/
+- [API Reference](docs/api-reference.md) — all types, methods, and errors
+- [Provider Guide](docs/providers.md) — provider-specific details, custom provider walkthrough
+- [Local Setup](docs/local-setup.md) — contributor setup, running tests
 
-# Type check
-uv run mypy src/
-```
+## Out of Scope (v0.1)
 
-## Not built (out of scope for v0.1)
-
-- Retry / exponential backoff
-- Response caching
-- Rate limiting / quota tracking
-- Token counting / cost estimation
-- Prompt templating
-- Conversation / session persistence
-- Embeddings, image generation, audio APIs
-- Structured-output helpers
-- Multi-provider fallback / load balancing
-- Observability hooks (OpenTelemetry)
-
-## Architecture
-
-See [docs/architecture-brief.md](docs/architecture-brief.md) for the design rationale and key tradeoffs.
+Retry/backoff, caching, rate-limit tracking, token counting, prompt templating,
+session persistence, embeddings, structured-output helpers, multi-provider fallback,
+OpenTelemetry hooks.
