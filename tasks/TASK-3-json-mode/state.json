@@ -1,10 +1,12 @@
 {
   "task_id": "TASK-3",
   "slug": "json-mode",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "coding",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T03:20Z", "ended": null, "result": null}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
+  "branch": "feature/TASK-3-json-mode",
   "pr": null,
   "depends_on": [],
   "security_hints": [],
