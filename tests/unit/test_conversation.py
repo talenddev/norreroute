@@ -196,9 +196,7 @@ class TestConversationSend:
 
     @pytest.mark.asyncio
     async def test_send_multiple_turns(self) -> None:
-        provider = FakeProvider(
-            responses=[_make_response("a1"), _make_response("a2")]
-        )
+        provider = FakeProvider(responses=[_make_response("a1"), _make_response("a2")])
         client = _make_client(provider)
         conv = Conversation(client, model="test-model")
         await conv.send("q1")
@@ -210,9 +208,7 @@ class TestConversationSend:
 
     @pytest.mark.asyncio
     async def test_request_includes_prior_history(self) -> None:
-        provider = FakeProvider(
-            responses=[_make_response("a1"), _make_response("a2")]
-        )
+        provider = FakeProvider(responses=[_make_response("a1"), _make_response("a2")])
         client = _make_client(provider)
         conv = Conversation(client, model="test-model")
         await conv.send("first")
@@ -375,9 +371,7 @@ class TestTrimBehaviour:
     @pytest.mark.asyncio
     async def test_trim_raises_when_tail_exceeds_budget(self) -> None:
         """ConversationOverflowError when tail alone exceeds budget."""
-        provider = FakeProvider(
-            responses=[_make_response("ok"), _make_response("ok")]
-        )
+        provider = FakeProvider(responses=[_make_response("ok"), _make_response("ok")])
         client = _make_client(provider)
         # keep_last_n=2 means 2 messages always pinned; budget=0 forces overflow
         trim = TrimStrategy(max_input_tokens=0, keep_last_n=2)
@@ -393,9 +387,7 @@ class TestTrimBehaviour:
     @pytest.mark.asyncio
     async def test_trim_keep_last_n_zero(self) -> None:
         """keep_last_n=0 means no pinned messages."""
-        provider = FakeProvider(
-            responses=[_make_response("ok"), _make_response("ok")]
-        )
+        provider = FakeProvider(responses=[_make_response("ok"), _make_response("ok")])
         client = _make_client(provider)
         trim = TrimStrategy(max_input_tokens=1000, keep_last_n=0)
         conv = Conversation(client, model="test-model", trim=trim)
@@ -488,9 +480,7 @@ class TestConversationSerialisation:
 
     @pytest.mark.asyncio
     async def test_restored_conversation_can_continue(self) -> None:
-        provider = FakeProvider(
-            responses=[_make_response("r1"), _make_response("r2")]
-        )
+        provider = FakeProvider(responses=[_make_response("r1"), _make_response("r2")])
         client = _make_client(provider)
         conv = Conversation(client, model="test-model")
         await conv.send("turn1")

@@ -1,10 +1,16 @@
 {
   "task_id": "TASK-6",
   "slug": "integration-roundtrip",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T14:00:00Z", "ended": "2026-04-30T14:30:00Z", "result": "ok"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T14:31:00Z", "ended": "2026-04-30T15:00:00Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T15:01:00Z", "ended": "2026-04-30T15:30:00Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T15:31:00Z", "ended": "2026-04-30T15:35:00Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T15:35:00Z", "ended": "2026-04-30T15:35:00Z", "result": "ok"}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
+  "branch": "feature/TASK-6-integration-roundtrip",
   "pr": null,
   "depends_on": ["TASK-4", "TASK-5"],
   "security_hints": [],

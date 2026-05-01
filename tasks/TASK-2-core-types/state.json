@@ -1,10 +1,16 @@
 {
   "task_id": "TASK-2",
   "slug": "core-types",
-  "stage": "pending",
-  "stage_history": [],
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T08:00:00Z", "ended": "2026-04-30T08:30:00Z", "result": "ok"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-04-30T08:31:00Z", "ended": "2026-04-30T09:00:00Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-04-30T09:01:00Z", "ended": "2026-04-30T09:30:00Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-04-30T09:31:00Z", "ended": "2026-04-30T09:35:00Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-04-30T09:35:00Z", "ended": "2026-04-30T09:35:00Z", "result": "ok"}
+  ],
   "fix_iterations": {"review": 0, "test": 0},
-  "branch": null,
+  "branch": "feature/TASK-2-core-types",
   "pr": null,
   "depends_on": ["TASK-1"],
   "security_hints": [],

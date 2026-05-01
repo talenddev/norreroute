@@ -1,13 +1,17 @@
 {
   "task_id": "TASK-3",
   "slug": "json-mode",
-  "stage": "coding",
+  "stage": "done",
   "stage_history": [
-    {"stage": "coding", "agent": "python-developer", "started": "2026-04-30T03:20Z", "ended": null, "result": null}
+    {"stage": "coding",    "agent": "python-developer", "started": "2026-04-30T03:20:00Z", "ended": "2026-05-01T10:00:00Z", "result": "ok"},
+    {"stage": "reviewing", "agent": "python-reviewer",  "started": "2026-05-01T10:01:00Z", "ended": "2026-05-01T10:30:00Z", "result": "ok"},
+    {"stage": "testing",   "agent": "python-tester",    "started": "2026-05-01T10:31:00Z", "ended": "2026-05-01T11:00:00Z", "result": "ok"},
+    {"stage": "merging",   "agent": null,               "started": "2026-05-01T11:01:00Z", "ended": "2026-05-01T11:05:00Z", "result": "ok"},
+    {"stage": "done",      "agent": null,               "started": "2026-05-01T11:05:00Z", "ended": "2026-05-01T11:05:00Z", "result": "ok"}
   ],
   "fix_iterations": {"review": 0, "test": 0},
   "branch": "feature/TASK-3-json-mode",
-  "pr": null,
+  "pr": "https://github.com/talenddev/norreroute/pull/16",
   "depends_on": [],
   "security_hints": [],
   "blockers": []
