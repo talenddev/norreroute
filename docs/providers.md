@@ -111,6 +111,26 @@ asyncio.run(main())
 
 The Anthropic provider uses `anthropic.AsyncAnthropic.messages.stream` and exposes the text stream via `TextDelta` events. Tool call streaming emits `StreamEnd` only — `ToolCallDelta` is not emitted by this provider. Retrieve tool calls from a non-streaming `chat` call instead.
 
+### JSON Mode
+
+When using `json_chat` with an Anthropic client, the following hint is merged into `ChatRequest.extra` automatically:
+
+```python
+{"response_format": {"type": "json_object"}}
+```
+
+You do not need to set this manually. The original `ChatRequest` is never mutated.
+
+```python
+from norreroute import json_chat
+
+response, data = await json_chat(client, request)
+```
+
+### OpenTelemetry
+
+When tracing is enabled, the `gen_ai.system` attribute on every span is set to `"norreroute"` (not the provider name). All other `gen_ai.*` attributes follow the OpenTelemetry Semantic Conventions for Generative AI.
+
 ### Provider-Specific Parameters via `extra`
 
 Pass Anthropic-specific parameters through `ChatRequest.extra`. These are not validated:
@@ -206,6 +226,30 @@ When sending tool results back, use `role="tool"` and a `ToolResultPart`. Each `
 ### Streaming Quirk
 
 The Ollama provider streams token-by-token over NDJSON (`/api/chat` with `"stream": true`). Streaming does not support tool calls — use non-streaming `chat` for tool use with Ollama.
+
+### JSON Mode
+
+When using `json_chat` with an Ollama client, the following hint is merged into `ChatRequest.extra` automatically:
+
+```python
+{"format": "json"}
+```
+
+You do not need to set this manually. The original `ChatRequest` is never mutated.
+
+```python
+from norreroute import json_chat
+
+response, data = await json_chat(client, request)
+```
+
+### Cost Estimation
+
+Ollama models run locally. `estimate_cost` always returns `$0.00` for Ollama models in the built-in pricing table (`llama3.1`, `qwen2.5`). `CostEstimate.is_estimate` will be `False` when Ollama reports token usage.
+
+### OpenTelemetry
+
+When tracing is enabled, the `gen_ai.system` attribute on every span is set to `"norreroute"` (not the provider name). All other `gen_ai.*` attributes follow the OpenTelemetry Semantic Conventions for Generative AI.
 
 ### Error Mapping
 
@@ -340,3 +384,20 @@ assert isinstance(provider, Provider), "Provider protocol not satisfied"
 ```
 
 This uses `@runtime_checkable` and checks for the presence of `name`, `chat`, `stream`, and `aclose`.
+
+### JSON Mode with Custom Providers
+
+`json_chat` looks up the provider name via `client.provider_name` to select the hint to merge. If your provider name is not `"anthropic"` or `"ollama"`, no hint is merged and the request is sent as-is. Add the appropriate JSON instruction to your system prompt or `ChatRequest.extra` manually.
+
+### Cost Estimation with Custom Providers
+
+`estimate_cost` will raise `UnknownModelError` for models not in the built-in table. Pass a `pricing` dict to supply prices for your models:
+
+```python
+from norreroute import ModelPrice, estimate_cost
+
+my_prices = {
+    "my-model-v1": ModelPrice(input_per_mtok_usd=0.50, output_per_mtok_usd=1.50),
+}
+cost = estimate_cost(response, pricing=my_prices)
+```
