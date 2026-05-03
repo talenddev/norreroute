@@ -36,6 +36,7 @@ class OllamaSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="OLLAMA_",
         env_file=".env",
+        extra="ignore",
     )
 
 

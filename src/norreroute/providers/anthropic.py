@@ -38,6 +38,7 @@ class AnthropicSettings(BaseSettings):
     model_config = SettingsConfigDict(
         env_prefix="ANTHROPIC_",
         env_file=".env",
+        extra="ignore",
     )
 
 
