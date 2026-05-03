@@ -1,6 +1,6 @@
 [project]
 name = "norreroute"
-version = "0.1.1"
+version = "0.2.0"
 description = "A pragmatic, provider-agnostic Python library for calling LLMs"
 readme = "README.md"
 license = {text = "MIT"}
