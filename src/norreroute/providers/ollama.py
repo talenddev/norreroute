@@ -184,6 +184,7 @@ class OllamaProvider:
     """LLM provider backed by the Ollama local HTTP API."""
 
     name = "ollama"
+    supports_vision: bool = True  # Ollama vision models (e.g. llava) accept images
 
     def __init__(self, **kwargs: Any) -> None:
         settings = OllamaSettings(**kwargs)

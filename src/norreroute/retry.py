@@ -94,6 +94,8 @@ class RetryingProvider:
         self._sleep = sleep
         # Expose name as a plain attribute to satisfy the Provider Protocol
         self.name: str = inner.name
+        # Mirror supports_vision from inner provider; default True for unknown providers
+        self.supports_vision: bool = getattr(inner, "supports_vision", True)
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Send a chat request with retry on transient errors.

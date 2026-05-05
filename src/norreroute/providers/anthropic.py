@@ -152,6 +152,7 @@ class AnthropicProvider:
     """LLM provider backed by the Anthropic Claude API."""
 
     name = "anthropic"
+    supports_vision: bool = True  # Claude 3+ supports vision
 
     def __init__(self, **kwargs: Any) -> None:
         settings = AnthropicSettings(**kwargs)

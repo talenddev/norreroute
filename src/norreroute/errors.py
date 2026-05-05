@@ -61,6 +61,22 @@ class ConversationOverflowError(AIProxyError):
     """Raised when a Conversation cannot trim its history to fit the token budget."""
 
 
+class UnsupportedCapabilityError(AIProxyError):
+    """Raised when a ChatRequest uses a feature the provider does not support.
+
+    Args:
+        capability: The unsupported capability name (e.g. ``"vision"``).
+        provider: The provider name.
+    """
+
+    def __init__(self, capability: str, *, provider: str) -> None:
+        super().__init__(
+            f"Provider '{provider}' does not support capability '{capability}'"
+        )
+        self.capability = capability
+        self.provider = provider
+
+
 __all__ = [
     "AIProxyError",
     "ConfigurationError",
@@ -72,4 +88,5 @@ __all__ = [
     "UnknownModelError",
     "JSONValidationError",
     "ConversationOverflowError",
+    "UnsupportedCapabilityError",
 ]

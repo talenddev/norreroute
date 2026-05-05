@@ -9,6 +9,7 @@ from .errors import (
     ConversationOverflowError,
     JSONValidationError,
     UnknownModelError,
+    UnsupportedCapabilityError,
 )
 from .json_mode import json_chat
 from .pricing import CostEstimate, ModelPrice, count_tokens_approx, estimate_cost
@@ -29,6 +30,7 @@ __all__ = [
     "UnknownModelError",
     "JSONValidationError",
     "ConversationOverflowError",
+    "UnsupportedCapabilityError",
     "json_chat",
     "__version__",
 ]
