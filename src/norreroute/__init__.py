@@ -15,7 +15,7 @@ from .json_mode import json_chat
 from .pricing import CostEstimate, ModelPrice, count_tokens_approx, estimate_cost
 from .retry import RetryingProvider, RetryPolicy
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
     "Client",

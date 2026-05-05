@@ -111,9 +111,7 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                     }
                 )
             else:
-                raise TypeError(
-                    f"Unsupported content part type: {type(part).__name__}"
-                )
+                raise TypeError(f"Unsupported content part type: {type(part).__name__}")
         # Flatten to string if single text block and role != tool
         if len(content_blocks) == 1 and content_blocks[0]["type"] == "text":
             result.append({"role": msg.role, "content": content_blocks[0]["text"]})

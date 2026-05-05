@@ -33,12 +33,17 @@ def _make_request(messages: list[Message], system: str | None = None) -> ChatReq
 
 def test_ollama_serialiser_includes_base64_images() -> None:
     jpeg = b"\xff\xd8\xff\xe0"
-    request = _make_request([
-        Message(role="user", content=[
-            TextPart(text="What is this?"),
-            ImagePart(data=jpeg),
-        ])
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="user",
+                content=[
+                    TextPart(text="What is this?"),
+                    ImagePart(data=jpeg),
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_ollama(request)
     assert len(serialised) == 1
     msg = serialised[0]
@@ -59,9 +64,7 @@ def test_ollama_serialiser_image_only_message() -> None:
 
 
 def test_ollama_serialiser_no_images_unchanged() -> None:
-    request = _make_request(
-        [Message(role="user", content=[TextPart(text="Hello")])]
-    )
+    request = _make_request([Message(role="user", content=[TextPart(text="Hello")])])
     serialised = _messages_to_ollama(request)
     assert len(serialised) == 1
     msg = serialised[0]
@@ -72,11 +75,15 @@ def test_ollama_serialiser_no_images_unchanged() -> None:
 def test_ollama_serialiser_multiple_messages_with_images() -> None:
     img1 = b"\x01\x02"
     img2 = b"\x03\x04"
-    request = _make_request([
-        Message(role="user", content=[TextPart(text="first"), ImagePart(data=img1)]),
-        Message(role="assistant", content=[TextPart(text="answer")]),
-        Message(role="user", content=[ImagePart(data=img2)]),
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="user", content=[TextPart(text="first"), ImagePart(data=img1)]
+            ),
+            Message(role="assistant", content=[TextPart(text="answer")]),
+            Message(role="user", content=[ImagePart(data=img2)]),
+        ]
+    )
     serialised = _messages_to_ollama(request)
     assert len(serialised) == 3
     assert serialised[0]["images"] == [base64.b64encode(img1).decode("ascii")]
@@ -87,15 +94,17 @@ def test_ollama_serialiser_multiple_messages_with_images() -> None:
 
 def test_ollama_serialiser_images_dropped_in_tool_use_message() -> None:
     img = b"\xff\xd8"
-    request = _make_request([
-        Message(
-            role="assistant",
-            content=[
-                ToolUsePart(id="call_1", name="search", arguments={"q": "cats"}),
-                ImagePart(data=img),
-            ],
-        )
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="assistant",
+                content=[
+                    ToolUsePart(id="call_1", name="search", arguments={"q": "cats"}),
+                    ImagePart(data=img),
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_ollama(request)
     assert len(serialised) == 1
     # Images are dropped in tool-use context
@@ -105,15 +114,17 @@ def test_ollama_serialiser_images_dropped_in_tool_use_message() -> None:
 
 def test_ollama_serialiser_images_dropped_in_tool_result_message() -> None:
     img = b"\xff\xd8"
-    request = _make_request([
-        Message(
-            role="tool",
-            content=[
-                ToolResultPart(tool_use_id="call_1", content="result"),
-                ImagePart(data=img),
-            ],
-        )
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="tool",
+                content=[
+                    ToolResultPart(tool_use_id="call_1", content="result"),
+                    ImagePart(data=img),
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_ollama(request)
     # tool result generates one entry per ToolResultPart, images dropped
     assert len(serialised) == 1
@@ -123,14 +134,19 @@ def test_ollama_serialiser_images_dropped_in_tool_result_message() -> None:
 
 def test_ollama_serialiser_multiple_images_in_one_message() -> None:
     img1, img2, img3 = b"\x01", b"\x02", b"\x03"
-    request = _make_request([
-        Message(role="user", content=[
-            TextPart(text="compare"),
-            ImagePart(data=img1),
-            ImagePart(data=img2),
-            ImagePart(data=img3),
-        ])
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="user",
+                content=[
+                    TextPart(text="compare"),
+                    ImagePart(data=img1),
+                    ImagePart(data=img2),
+                    ImagePart(data=img3),
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_ollama(request)
     assert serialised[0]["images"] == [
         base64.b64encode(img1).decode("ascii"),
@@ -170,9 +186,15 @@ async def test_ollama_chat_with_image_e2e(provider: OllamaProvider) -> None:
 
     request = ChatRequest(
         model="llava",
-        messages=[Message(role="user", content=[
-            TextPart(text="Describe"), ImagePart(data=jpeg),
-        ])],
+        messages=[
+            Message(
+                role="user",
+                content=[
+                    TextPart(text="Describe"),
+                    ImagePart(data=jpeg),
+                ],
+            )
+        ],
     )
     response = await provider.chat(request)
     assert response.content[0].text == "A cat."  # type: ignore[union-attr]
@@ -190,13 +212,15 @@ async def test_ollama_stream_with_image(provider: OllamaProvider) -> None:
     jpeg = b"\xff\xd8"
     stream_lines = [
         json.dumps({"message": {"content": "A "}, "done": False}),
-        json.dumps({
-            "message": {"content": "cat."},
-            "done": True,
-            "done_reason": "stop",
-            "prompt_eval_count": 5,
-            "eval_count": 3,
-        }),
+        json.dumps(
+            {
+                "message": {"content": "cat."},
+                "done": True,
+                "done_reason": "stop",
+                "prompt_eval_count": 5,
+                "eval_count": 3,
+            }
+        ),
     ]
     route = respx.post(f"{BASE_URL}/api/chat").mock(
         return_value=httpx.Response(

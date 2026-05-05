@@ -29,9 +29,9 @@ def _make_request(messages: list[Message]) -> ChatRequest:
 
 def test_anthropic_serialiser_image_block_shape() -> None:
     data = b"\xff\xd8"
-    request = _make_request([
-        Message(role="user", content=[ImagePart(data=data, media_type="image/png")])
-    ])
+    request = _make_request(
+        [Message(role="user", content=[ImagePart(data=data, media_type="image/png")])]
+    )
     serialised = _messages_to_anthropic(request)
     assert len(serialised) == 1
     # Image-only message should NOT be flattened — it's a list with one image block
@@ -46,12 +46,17 @@ def test_anthropic_serialiser_image_block_shape() -> None:
 
 def test_anthropic_serialiser_text_and_image_no_flatten() -> None:
     data = b"\xff\xd8"
-    request = _make_request([
-        Message(role="user", content=[
-            TextPart(text="Describe this"),
-            ImagePart(data=data),
-        ])
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="user",
+                content=[
+                    TextPart(text="Describe this"),
+                    ImagePart(data=data),
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_anthropic(request)
     content = serialised[0]["content"]
     assert isinstance(content, list)
@@ -62,9 +67,7 @@ def test_anthropic_serialiser_text_and_image_no_flatten() -> None:
 
 
 def test_anthropic_serialiser_text_only_still_flattens() -> None:
-    request = _make_request([
-        Message(role="user", content=[TextPart(text="Hello")])
-    ])
+    request = _make_request([Message(role="user", content=[TextPart(text="Hello")])])
     serialised = _messages_to_anthropic(request)
     # Single text block -> plain string (regression)
     assert serialised[0]["content"] == "Hello"
@@ -85,20 +88,23 @@ def test_anthropic_serialiser_unknown_part_raises_type_error() -> None:
 
 def test_anthropic_serialiser_default_jpeg_media_type() -> None:
     data = b"\xff\xd8"
-    request = _make_request([
-        Message(role="user", content=[ImagePart(data=data)])
-    ])
+    request = _make_request([Message(role="user", content=[ImagePart(data=data)])])
     serialised = _messages_to_anthropic(request)
     block = serialised[0]["content"][0]
     assert block["source"]["media_type"] == "image/jpeg"
 
 
 def test_anthropic_serialiser_tool_result_part_still_works() -> None:
-    request = _make_request([
-        Message(role="tool", content=[
-            ToolResultPart(tool_use_id="call_1", content="42", is_error=False)
-        ])
-    ])
+    request = _make_request(
+        [
+            Message(
+                role="tool",
+                content=[
+                    ToolResultPart(tool_use_id="call_1", content="42", is_error=False)
+                ],
+            )
+        ]
+    )
     serialised = _messages_to_anthropic(request)
     # Single ToolResultPart — not flattened (not a text block)
     content = serialised[0]["content"]
@@ -152,10 +158,13 @@ async def test_anthropic_chat_with_image_e2e(mocker: Any) -> None:
     request = ChatRequest(
         model="claude-3-5-sonnet-20241022",
         messages=[
-            Message(role="user", content=[
-                TextPart(text="Describe"),
-                ImagePart(data=jpeg, media_type="image/jpeg"),
-            ])
+            Message(
+                role="user",
+                content=[
+                    TextPart(text="Describe"),
+                    ImagePart(data=jpeg, media_type="image/jpeg"),
+                ],
+            )
         ],
         max_tokens=256,
     )

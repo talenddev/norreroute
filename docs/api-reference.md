@@ -76,11 +76,13 @@ Sends a chat completion request and returns the full response.
 |---|---|---|
 | `request` | `ChatRequest` | The request to send |
 
-Returns `ChatResponse`. Raises any `ProviderError` subclass on provider-level errors.
+Returns `ChatResponse`. Raises `UnsupportedCapabilityError` pre-flight if the request
+contains `ImagePart` and the provider does not support vision. Raises any `ProviderError`
+subclass on provider-level errors.
 
 ```python
 response = await client.chat(request)
-print(response.content[0].text)
+print(response.text)
 ```
 
 ---
@@ -96,6 +98,9 @@ Returns an async iterator that yields `StreamEvent` objects as they arrive.
 | Parameter | Type | Description |
 |---|---|---|
 | `request` | `ChatRequest` | The request to stream |
+
+Raises `UnsupportedCapabilityError` pre-flight if the request contains `ImagePart` and the
+provider does not support vision.
 
 ```python
 async for event in client.stream(request):
@@ -174,6 +179,10 @@ class Provider(Protocol):
 
 `stream` is a regular method returning an `AsyncIterator`, not an `async def`. Providers implement it as a regular method returning an async generator. This allows `stream` to be called synchronously and iterated lazily.
 
+Providers may also declare a `supports_vision: bool` attribute. When present and `False`,
+`Client` raises `UnsupportedCapabilityError` before sending any request that contains
+`ImagePart`. Both built-in providers (`anthropic`, `ollama`) set `supports_vision = True`.
+
 ---
 
 ## Types
@@ -182,7 +191,7 @@ class Provider(Protocol):
 from norreroute.types import (
     ChatRequest, ChatResponse,
     Message, ContentPart,
-    TextPart, ToolUsePart, ToolResultPart,
+    TextPart, ImagePart, ToolUsePart, ToolResultPart,
     ToolSpec, Usage, Role,
 )
 ```
@@ -239,6 +248,20 @@ class ChatResponse:
 | `usage` | `Usage` | Token counts |
 | `raw` | `dict[str, Any]` | Untouched provider payload for debugging and audit |
 
+#### `ChatResponse.text`
+
+```python
+@property
+def text(self) -> str
+```
+
+Returns the concatenated text of all `TextPart` blocks in `content`. Returns `""` when
+there are no `TextPart` blocks (e.g. a pure tool-use response).
+
+```python
+print(response.text)   # equivalent to "".join(p.text for p in response.content if isinstance(p, TextPart))
+```
+
 ---
 
 ### `Message`
@@ -252,12 +275,49 @@ class Message:
 
 `Role = Literal["system", "user", "assistant", "tool"]`
 
+#### `Message.user`
+
+```python
+@classmethod
+def user(cls, text: str = "", *, images: Sequence[bytes] = ()) -> Message
+```
+
+Convenience constructor for a user-role message. Each item in `images` is wrapped in an
+`ImagePart` with `media_type="image/jpeg"`. `text` and `images` may both be provided;
+`text` is added first.
+
+| Parameter | Type | Description |
+|---|---|---|
+| `text` | `str` | Text prompt. Optional if `images` is provided. |
+| `images` | `Sequence[bytes]` | Raw image bytes. Each item becomes an `ImagePart(data=..., media_type="image/jpeg")`. |
+
+```python
+msg = Message.user("Describe this image.", images=[jpeg_bytes])
+msg = Message.user(images=[jpeg_bytes])          # text-free
+msg = Message.user("Hello")                      # text-only, same as before
+```
+
+To use a media type other than `image/jpeg`, construct `ImagePart` directly.
+
+#### `Message.system`
+
+```python
+@classmethod
+def system(cls, text: str) -> Message
+```
+
+Convenience constructor for a system-role message containing a single `TextPart`.
+
+```python
+msg = Message.system("You are a helpful assistant.")
+```
+
 ---
 
 ### `ContentPart`
 
 ```python
-ContentPart = TextPart | ToolUsePart | ToolResultPart
+ContentPart = TextPart | ImagePart | ToolUsePart | ToolResultPart
 ```
 
 ---
@@ -272,6 +332,34 @@ class TextPart:
 ```
 
 Plain text content block.
+
+---
+
+### `ImagePart`
+
+```python
+@dataclass(frozen=True)
+class ImagePart:
+    data: bytes
+    media_type: str = "image/jpeg"
+    type: Literal["image"] = "image"
+```
+
+A binary image content block. Import from `norreroute.types`.
+
+| Field | Type | Description |
+|---|---|---|
+| `data` | `bytes` | Raw image bytes |
+| `media_type` | `str` | MIME type of the image. Default `"image/jpeg"`. Common values: `"image/jpeg"`, `"image/png"`, `"image/gif"`, `"image/webp"`. |
+| `type` | `Literal["image"]` | Always `"image"`. Identifies the part type. |
+
+Providers base64-encode `data` themselves during serialisation. You supply raw bytes.
+
+```python
+from norreroute.types import ImagePart
+
+part = ImagePart(data=png_bytes, media_type="image/png")
+```
 
 ---
 
@@ -474,6 +562,9 @@ You do not normally construct this directly. Use `Client("anthropic", retry=...)
 | `inner` | `Provider` | The underlying provider to delegate to |
 | `policy` | `RetryPolicy` | Retry configuration |
 | `sleep` | `Callable[[float], Awaitable[None]]` | Injectable sleep callable. Default `asyncio.sleep`. Override in tests to avoid actual sleeps. |
+
+`RetryingProvider` forwards `supports_vision` from the wrapped provider. If the inner
+provider does not declare `supports_vision`, it defaults to `True`.
 
 Stream retries occur only before the first `TextDelta` or `ToolCallDelta` event is yielded. After the first content event, errors propagate without retry and partial responses are never re-emitted.
 
@@ -770,7 +861,7 @@ Appends a user message with the given text, sends the request, appends the assis
 async def send_message(self, msg: Message, **extra: Any) -> ChatResponse
 ```
 
-Same as `send` but accepts a pre-built `Message`. Use this to send non-text content parts or tool results.
+Same as `send` but accepts a pre-built `Message`. Use this to send non-text content parts (e.g. `ImagePart`) or tool results.
 
 | Parameter | Type | Description |
 |---|---|---|
@@ -817,6 +908,7 @@ Reconstructs a `Conversation` from a string produced by `to_json`.
 ## Errors
 
 ```python
+from norreroute import UnsupportedCapabilityError
 from norreroute.errors import (
     AIProxyError,
     ConfigurationError,
@@ -828,6 +920,7 @@ from norreroute.errors import (
     TimeoutError_,
     ToolArgumentError,
     UnknownModelError,
+    UnsupportedCapabilityError,
 )
 ```
 
@@ -843,7 +936,8 @@ AIProxyError
 ├── ToolArgumentError
 ├── UnknownModelError
 ├── JSONValidationError
-└── ConversationOverflowError
+├── ConversationOverflowError
+└── UnsupportedCapabilityError
 ```
 
 ### `AIProxyError`
@@ -898,6 +992,30 @@ Subclass of `AIProxyError`. Raised by `json_chat` (when `strict=True`) if the mo
 ### `ConversationOverflowError`
 
 Subclass of `AIProxyError`. Raised by `Conversation` when the pinned messages (system prompt + last N) exceed the `TrimStrategy.max_input_tokens` budget and the history cannot be trimmed any further.
+
+### `UnsupportedCapabilityError`
+
+```python
+class UnsupportedCapabilityError(AIProxyError):
+    capability: str
+    provider: str
+```
+
+Raised pre-flight by `Client.chat` and `Client.stream` when a `ChatRequest` uses a
+capability the target provider does not support. Currently only fires for vision: if any
+message in `request.messages` contains an `ImagePart` and the provider has
+`supports_vision = False`.
+
+| Attribute | Type | Description |
+|---|---|---|
+| `capability` | `str` | The unsupported capability name, e.g. `"vision"` |
+| `provider` | `str` | The provider name, e.g. `"my-provider"` |
+
+`UnsupportedCapabilityError` is also exported directly from `norreroute`:
+
+```python
+from norreroute import UnsupportedCapabilityError
+```
 
 ---
 

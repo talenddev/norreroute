@@ -173,6 +173,7 @@ async def test_client_guard_fires_before_any_http_call() -> None:
 @pytest.mark.asyncio
 async def test_client_passes_through_when_no_image_part() -> None:
     client = Client(_NoVisionProvider())  # type: ignore[arg-type]
+
     # Replace _NoVisionProvider.chat to return a real response
     async def _mock_chat(request: ChatRequest) -> ChatResponse:
         return ChatResponse(
