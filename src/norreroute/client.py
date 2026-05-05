@@ -92,9 +92,7 @@ class Client:
             for part in msg.content
         )
         if has_images and not getattr(self._provider, "supports_vision", True):
-            raise UnsupportedCapabilityError(
-                "vision", provider=self._provider.name
-            )
+            raise UnsupportedCapabilityError("vision", provider=self._provider.name)
 
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Send a chat completion request asynchronously.

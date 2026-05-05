@@ -135,6 +135,74 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+## Vision / Multimodal
+
+Send images alongside a text prompt using `Message.user` and read the response with `response.text`:
+
+```python
+import asyncio
+from pathlib import Path
+from norreroute import Client
+from norreroute.types import ChatRequest, Message
+
+async def main() -> None:
+    client = Client("anthropic")  # or Client("ollama") with a vision-capable model
+
+    jpeg_bytes = Path("photo.jpg").read_bytes()
+
+    request = ChatRequest(
+        model="claude-3-5-sonnet-20241022",
+        messages=[
+            Message.user("Describe what you see in this image.", images=[jpeg_bytes])
+        ],
+        max_tokens=512,
+    )
+
+    response = await client.chat(request)
+    print(response.text)   # concatenated text of all TextPart blocks
+    await client.aclose()
+
+asyncio.run(main())
+```
+
+`Message.user(text, *, images=[...])` wraps each bytes item in an `ImagePart` with `media_type="image/jpeg"`. To send PNG or another format, construct `ImagePart` directly:
+
+```python
+from norreroute.types import ImagePart, Message, TextPart
+
+msg = Message(
+    role="user",
+    content=[
+        TextPart(text="What is in this diagram?"),
+        ImagePart(data=png_bytes, media_type="image/png"),
+    ],
+)
+```
+
+`response.text` is a convenience property on `ChatResponse` that concatenates all `TextPart` blocks into a single string. It returns `""` for pure tool-use responses.
+
+### Provider vision support
+
+| Provider | Vision support | Notes |
+|---|---|---|
+| Anthropic | Yes | Claude 3 and later (e.g. `claude-3-5-sonnet-20241022`) |
+| Ollama | Yes | Models with vision capability (e.g. `llava`, `llama3.2-vision`) |
+
+### `UnsupportedCapabilityError`
+
+If you send a request containing `ImagePart` to a provider whose `supports_vision` attribute is `False`, `Client.chat` and `Client.stream` raise `UnsupportedCapabilityError` before sending anything to the provider:
+
+```python
+from norreroute import UnsupportedCapabilityError
+
+try:
+    response = await client.chat(request)
+except UnsupportedCapabilityError as e:
+    print(f"{e.provider} does not support {e.capability}")
+```
+
+Both built-in providers (`anthropic`, `ollama`) set `supports_vision = True`. The error fires for custom providers that explicitly set `supports_vision = False`.
+
 ## Configuration
 
 ### Anthropic
@@ -444,6 +512,7 @@ my-provider = "my_package.providers:factory"
 ## Error Handling
 
 ```python
+from norreroute import UnsupportedCapabilityError
 from norreroute.errors import (
     AIProxyError,
     AuthenticationError,
@@ -458,6 +527,8 @@ from norreroute.errors import (
 
 try:
     response = await client.chat(request)
+except UnsupportedCapabilityError as e:
+    print(f"{e.provider} does not support {e.capability}")
 except AuthenticationError as e:
     print(f"Bad API key — provider={e.provider}, status={e.status}")
 except RateLimitError as e:
@@ -485,6 +556,7 @@ except ConversationOverflowError as e:
 | Non-streaming chat | Yes | Yes |
 | Streaming | Yes | Yes |
 | Tool calling | Yes | Yes (models that support it) |
+| Vision (multimodal) | Yes (Claude 3+) | Yes (llava-style models) |
 | `system` prompt | Native top-level param | Prepended as `system` role message |
 | `temperature` | Yes | Yes |
 | `max_tokens` | Yes | Yes (mapped to `num_predict`) |
