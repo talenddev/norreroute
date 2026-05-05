@@ -18,6 +18,7 @@ from norreroute.types import (
     ChatResponse,
     ContentPart,
     TextPart,
+    ToolResultPart,
     ToolSpec,
     ToolUsePart,
     Usage,
@@ -87,8 +88,7 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                         "input": part.arguments,
                     }
                 )
-            else:
-                # ToolResultPart
+            elif isinstance(part, ToolResultPart):
                 content_blocks.append(
                     {
                         "type": "tool_result",

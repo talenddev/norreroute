@@ -18,6 +18,21 @@ class TextPart:
 
 
 @dataclass(frozen=True)
+class ImagePart:
+    """A binary image content block.
+
+    Args:
+        data: Raw image bytes (e.g. JPEG or PNG).
+        media_type: MIME type of the image data. Providers that require
+            base64 will encode ``data`` themselves during serialisation.
+    """
+
+    data: bytes
+    media_type: str = "image/jpeg"
+    type: Literal["image"] = "image"
+
+
+@dataclass(frozen=True)
 class ToolUsePart:
     """A tool invocation block emitted by the model."""
 
@@ -37,7 +52,7 @@ class ToolResultPart:
     type: Literal["tool_result"] = "tool_result"
 
 
-ContentPart = TextPart | ToolUsePart | ToolResultPart
+ContentPart = TextPart | ImagePart | ToolUsePart | ToolResultPart
 
 
 @dataclass(frozen=True)
@@ -46,6 +61,30 @@ class Message:
 
     role: Role
     content: Sequence[ContentPart]
+
+    @classmethod
+    def user(cls, text: str = "", *, images: Sequence[bytes] = ()) -> Message:
+        """Convenience constructor for a user-role message.
+
+        Args:
+            text: The text prompt (optional if images are provided).
+            images: Raw image bytes. Each item becomes an ``ImagePart``
+                with ``media_type="image/jpeg"``.
+
+        Returns:
+            A ``Message`` with role ``"user"``.
+        """
+        parts: list[ContentPart] = []
+        if text:
+            parts.append(TextPart(text=text))
+        for img in images:
+            parts.append(ImagePart(data=img))
+        return cls(role="user", content=parts)
+
+    @classmethod
+    def system(cls, text: str) -> Message:
+        """Convenience constructor for a system-role message."""
+        return cls(role="system", content=[TextPart(text=text)])
 
 
 @dataclass(frozen=True)
@@ -90,10 +129,20 @@ class ChatResponse:
     usage: Usage
     raw: dict[str, Any]  # untouched provider payload for debugging
 
+    @property
+    def text(self) -> str:
+        """Return the concatenated text of all TextPart content blocks.
+
+        Returns an empty string if the response contains no TextPart
+        (e.g. a pure tool-use response).
+        """
+        return "".join(p.text for p in self.content if isinstance(p, TextPart))
+
 
 __all__ = [
     "Role",
     "TextPart",
+    "ImagePart",
     "ToolUsePart",
     "ToolResultPart",
     "ContentPart",
