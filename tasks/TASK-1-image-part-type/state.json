@@ -1,0 +1,18 @@
+{
+  "task_id": "TASK-1",
+  "slug": "image-part-type",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-05-05T00:00Z", "ended": "2026-05-05T00:10Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator", "started": "2026-05-05T00:10Z", "ended": "2026-05-05T00:10Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer", "started": "2026-05-05T00:11Z", "ended": "2026-05-05T00:15Z", "result": "ok"},
+    {"stage": "testing", "agent": "python-tester", "started": "2026-05-05T00:15Z", "ended": "2026-05-05T00:20Z", "result": "ok"},
+    {"stage": "merging", "agent": "tech-lead", "started": "2026-05-05T00:20Z", "ended": "2026-05-05T00:21Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-1-image-part-type",
+  "pr": null,
+  "depends_on": [],
+  "security_hints": [],
+  "blockers": []
+}

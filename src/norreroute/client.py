@@ -77,6 +77,23 @@ class Client:
         """
         return self._provider.name
 
+    def _validate_request(self, request: ChatRequest) -> None:
+        """Raise UnsupportedCapabilityError if the request uses unsupported features.
+
+        Currently checks for ImagePart presence when the provider does not
+        declare ``supports_vision = True``.
+        """
+        from .errors import UnsupportedCapabilityError
+        from .types import ImagePart
+
+        has_images = any(
+            isinstance(part, ImagePart)
+            for msg in request.messages
+            for part in msg.content
+        )
+        if has_images and not getattr(self._provider, "supports_vision", True):
+            raise UnsupportedCapabilityError("vision", provider=self._provider.name)
+
     async def chat(self, request: ChatRequest) -> ChatResponse:
         """Send a chat completion request asynchronously.
 
@@ -86,6 +103,7 @@ class Client:
         Returns:
             A ChatResponse containing the model's reply.
         """
+        self._validate_request(request)
         from .tracing import _set_response_attributes, chat_span
 
         with chat_span(self._tracer, request) as _span_ctx:
@@ -112,7 +130,7 @@ class Client:
         Returns:
             An async iterator of StreamEvent objects.
         """
-
+        self._validate_request(request)
         if self._tracer is None:
             return self._provider.stream(request)
         return self._traced_stream(request)

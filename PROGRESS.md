@@ -1,10 +1,19 @@
 # Build Progress
 
-**Project:** norreroute v0.2
-**Started:** 2026-04-30
-**Status:** Security Review
+**Project:** norreroute vision/multimodal support (v0.3 feature branch)
+**Started:** 2026-05-05
+**Status:** Complete
 
-## Task Summary
+## Task Summary — Vision build (TASK-1 through TASK-4)
+
+| # | Task | Stage | Coverage | Review iter | Test iter | Depends on |
+|---|------|-------|----------|-------------|-----------|------------|
+| 1 | ImagePart, ChatResponse.text, Message.user/system | done | 100% (types.py) | 0 | 0 | — |
+| 2 | Ollama vision serialisation | done | 91% (ollama.py) | 0 | 0 | TASK-1 |
+| 3 | Anthropic vision serialisation | done | 93% (anthropic.py) | 0 | 0 | TASK-1 |
+| 4 | Capability guard + retry forwarding | done | 100% (errors.py, retry.py) | 0 | 0 | TASK-1, TASK-2, TASK-3 |
+
+## Prior build tasks (v0.2)
 
 | # | Task | Stage | Coverage | Review iter | Test iter | Depends on |
 |---|------|-------|----------|-------------|-----------|------------|
@@ -22,4 +31,8 @@ None.
 
 - MEDIUM CICD-001: GitHub Actions pinned to mutable tags, not SHA digests (carried from v0.1)
 - LOW APP-002: OllamaSettings.base_url not validated as URL (carried from v0.1)
-- Pending: global security review of v0.2 new files (to be updated after review)
+- Pending: global security review of vision build new files (TASK-1 through TASK-4)
+
+## Final test run (vision build)
+
+243 passed, 0 failed. Overall coverage: 95%.

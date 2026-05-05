@@ -1,0 +1,18 @@
+{
+  "task_id": "TASK-2",
+  "slug": "ollama-vision",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-05-05T00:22Z", "ended": "2026-05-05T00:35Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator", "started": "2026-05-05T00:35Z", "ended": "2026-05-05T00:35Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer", "started": "2026-05-05T00:36Z", "ended": "2026-05-05T00:40Z", "result": "ok"},
+    {"stage": "testing", "agent": "python-tester", "started": "2026-05-05T00:40Z", "ended": "2026-05-05T00:42Z", "result": "ok"},
+    {"stage": "merging", "agent": "tech-lead", "started": "2026-05-05T00:42Z", "ended": "2026-05-05T00:43Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-2-ollama-vision",
+  "pr": null,
+  "depends_on": ["TASK-1"],
+  "security_hints": [],
+  "blockers": []
+}

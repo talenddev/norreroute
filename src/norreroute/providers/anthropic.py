@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import contextlib
 from collections.abc import AsyncIterator
 from typing import Any
@@ -17,7 +18,9 @@ from norreroute.types import (
     ChatRequest,
     ChatResponse,
     ContentPart,
+    ImagePart,
     TextPart,
+    ToolResultPart,
     ToolSpec,
     ToolUsePart,
     Usage,
@@ -87,8 +90,18 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                         "input": part.arguments,
                     }
                 )
-            else:
-                # ToolResultPart
+            elif isinstance(part, ImagePart):
+                content_blocks.append(
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": part.media_type,
+                            "data": base64.b64encode(part.data).decode("ascii"),
+                        },
+                    }
+                )
+            elif isinstance(part, ToolResultPart):
                 content_blocks.append(
                     {
                         "type": "tool_result",
@@ -97,6 +110,8 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                         "is_error": part.is_error,
                     }
                 )
+            else:
+                raise TypeError(f"Unsupported content part type: {type(part).__name__}")
         # Flatten to string if single text block and role != tool
         if len(content_blocks) == 1 and content_blocks[0]["type"] == "text":
             result.append({"role": msg.role, "content": content_blocks[0]["text"]})
@@ -135,6 +150,7 @@ class AnthropicProvider:
     """LLM provider backed by the Anthropic Claude API."""
 
     name = "anthropic"
+    supports_vision: bool = True  # Claude 3+ supports vision
 
     def __init__(self, **kwargs: Any) -> None:
         settings = AnthropicSettings(**kwargs)

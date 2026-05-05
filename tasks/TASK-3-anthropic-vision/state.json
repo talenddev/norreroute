@@ -1,0 +1,18 @@
+{
+  "task_id": "TASK-3",
+  "slug": "anthropic-vision",
+  "stage": "done",
+  "stage_history": [
+    {"stage": "coding", "agent": "python-developer", "started": "2026-05-05T00:44Z", "ended": "2026-05-05T00:55Z", "result": "ok"},
+    {"stage": "migrating", "agent": "python-migrator", "started": "2026-05-05T00:55Z", "ended": "2026-05-05T00:55Z", "result": "skipped"},
+    {"stage": "reviewing", "agent": "python-reviewer", "started": "2026-05-05T00:56Z", "ended": "2026-05-05T01:00Z", "result": "ok"},
+    {"stage": "testing", "agent": "python-tester", "started": "2026-05-05T01:00Z", "ended": "2026-05-05T01:02Z", "result": "ok"},
+    {"stage": "merging", "agent": "tech-lead", "started": "2026-05-05T01:02Z", "ended": "2026-05-05T01:03Z", "result": "ok"}
+  ],
+  "fix_iterations": {"review": 0, "test": 0},
+  "branch": "feature/TASK-3-anthropic-vision",
+  "pr": null,
+  "depends_on": ["TASK-1"],
+  "security_hints": [],
+  "blockers": []
+}
