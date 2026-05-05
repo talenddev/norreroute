@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import contextlib
 from collections.abc import AsyncIterator
 from typing import Any
@@ -17,6 +18,7 @@ from norreroute.types import (
     ChatRequest,
     ChatResponse,
     ContentPart,
+    ImagePart,
     TextPart,
     ToolResultPart,
     ToolSpec,
@@ -88,6 +90,17 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                         "input": part.arguments,
                     }
                 )
+            elif isinstance(part, ImagePart):
+                content_blocks.append(
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": part.media_type,
+                            "data": base64.b64encode(part.data).decode("ascii"),
+                        },
+                    }
+                )
             elif isinstance(part, ToolResultPart):
                 content_blocks.append(
                     {
@@ -96,6 +109,10 @@ def _messages_to_anthropic(request: ChatRequest) -> list[dict[str, Any]]:
                         "content": part.content,
                         "is_error": part.is_error,
                     }
+                )
+            else:
+                raise TypeError(
+                    f"Unsupported content part type: {type(part).__name__}"
                 )
         # Flatten to string if single text block and role != tool
         if len(content_blocks) == 1 and content_blocks[0]["type"] == "text":
