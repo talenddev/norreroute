@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import json
 from collections.abc import AsyncIterator
 from typing import Any
@@ -16,6 +17,7 @@ from norreroute.types import (
     ChatRequest,
     ChatResponse,
     ContentPart,
+    ImagePart,
     TextPart,
     ToolResultPart,
     ToolSpec,
@@ -61,17 +63,18 @@ def _messages_to_ollama(request: ChatRequest) -> list[dict[str, Any]]:
         result.append({"role": "system", "content": request.system})
 
     for msg in request.messages:
-        # Collect text and tool content
+        # Collect text, image, and tool content
         text_parts = [p for p in msg.content if isinstance(p, TextPart)]
+        image_parts = [p for p in msg.content if isinstance(p, ImagePart)]
         tool_result_parts = [p for p in msg.content if isinstance(p, ToolResultPart)]
         tool_use_parts = [p for p in msg.content if isinstance(p, ToolUsePart)]
 
         if tool_result_parts:
-            # Tool result messages
+            # Tool result messages — images are dropped (not supported in tool context)
             for part in tool_result_parts:
                 result.append({"role": "tool", "content": part.content})
         elif tool_use_parts:
-            # Assistant message with tool calls
+            # Tool-call message — images dropped (unsupported in tool context)
             calls = [
                 {
                     "function": {
@@ -85,7 +88,12 @@ def _messages_to_ollama(request: ChatRequest) -> list[dict[str, Any]]:
             result.append({"role": msg.role, "content": content, "tool_calls": calls})
         else:
             content = " ".join(p.text for p in text_parts)
-            result.append({"role": msg.role, "content": content})
+            ollama_msg: dict[str, Any] = {"role": msg.role, "content": content}
+            if image_parts:
+                ollama_msg["images"] = [
+                    base64.b64encode(p.data).decode("ascii") for p in image_parts
+                ]
+            result.append(ollama_msg)
 
     return result
 
